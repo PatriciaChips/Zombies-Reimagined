@@ -7,4 +7,6 @@ depend:
   - PattyEssentialsV3
 commands:
   ztest:
-    permission: zombies.ztest
+    permission: zombies.dev
+  zitems:
+    permission: zombies.dev

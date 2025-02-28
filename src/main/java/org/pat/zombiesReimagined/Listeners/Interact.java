@@ -3,10 +3,8 @@ package org.pat.zombiesReimagined.Listeners;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.pat.pattyEssentialsV3.Configs.PlayerDataConfig;
 import org.pat.pattyEssentialsV3.Utils;
 
 import java.io.IOException;
@@ -21,6 +19,7 @@ public class Interact implements Listener {
 
         if (e.getAction().isRightClick()) {
             if (item != null) {
+
                 switch (item.getType()) {
                     case IRON_HOE:
                         p.performCommand("ztest 1");
