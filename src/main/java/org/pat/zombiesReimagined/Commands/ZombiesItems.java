@@ -24,13 +24,13 @@ public class ZombiesItems implements TabExecutor {
 
         if (sender instanceof Player p) {
             List<ItemStack> devItems = new ArrayList<>(List.of(new Item[] {
-                    new Item(UseType.DEV, "&fSelection Wand", Material.STICK, 1),
-                    new Item(UseType.DEV, "&fExecute Task", Material.BLAZE_ROD, 1)
+                    new Item(UseType.DEV, "&fSelection Wand", Material.STICK, 1, "selection_wand"),
+                    new Item(UseType.DEV, "&fExecute Task", Material.BLAZE_ROD, 1, "execution_wand")
             }));
 
             List<ItemStack> gunItems = new ArrayList<>(List.of(new Item[] {
-                    new Item(UseType.GUN, "&FAssault Rifle", Material.IRON_HOE, 1, 10, 10, 10, 10),
-                    new Item(UseType.GUN, "&FSniper", Material.NETHERITE_HOE, 1, 10, 10, 10, 10),
+                    new Item(UseType.GUN, "&FAssault Rifle", Material.IRON_HOE, 1, "rifle", 10, 10, 10, 10),
+                    new Item(UseType.GUN, "&FSniper", Material.NETHERITE_HOE, 1, "sniper", 10, 10, 10, 10),
             }));
 
             Inventory inv = Bukkit.createInventory(p, 27, "Custom items");
