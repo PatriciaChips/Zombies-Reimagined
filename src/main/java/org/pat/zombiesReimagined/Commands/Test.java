@@ -43,10 +43,10 @@ public class Test implements TabExecutor {
             TextDisplay textDisplayBack = p.getWorld().spawn(p.getLocation(), TextDisplay.class);
             textDisplayBack.setBackgroundColor(Color.fromARGB(50, 50, 250, 50));
             textDisplayBack.setSeeThrough(true);
-            textDisplayBack.setText(" ");
+            textDisplayBack.setText("wake up babe, text displays just dropped.");
             textDisplayBack.setBrightness(new Display.Brightness(5, 5));
             textDisplayBack.setBillboard(Display.Billboard.FIXED);
-            textDisplayBack.setTransformationMatrix(new Matrix4f().scaleLocal(-1, 1, 1));  // Flip horizontally
+            textDisplayBack.setTransformationMatrix(new Matrix4f().scaleLocal(1, 1, -1));  // Flip horizontally
             textDisplayBack.setInterpolationDuration(200);
             textDisplayBack.setInterpolationDelay(1);
 
@@ -169,6 +169,8 @@ public class Test implements TabExecutor {
             holeLocation.setYaw(yaw);
             //holeLocation.setDirection(holeVec);
 
+            p.getWorld().playSound(holeLocation, hitLocation.getBlock().getBlockSoundGroup().getBreakSound(), 0.02F, 0.9F);
+
             p.getWorld().spawnParticle(Particle.BLOCK, holeLocation, 5, 0.1, 0.1, 0.1, hitLocation.getBlock().getType().createBlockData());
 
             BlockDisplay holedisplay = (BlockDisplay) p.getWorld().spawnEntity(holeLocation, EntityType.BLOCK_DISPLAY);
@@ -186,9 +188,10 @@ public class Test implements TabExecutor {
             holeDisplayPuff.setBrightness(new Display.Brightness(0, 0));
 
             int randomPuffRotation = new Random().nextInt(361);
+            int randomPuffRotation1 = new Random().nextInt(361);
             holedisplay.setTransformationMatrix(new Matrix4f().scale(0.25F, 0.25F, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocal(randomPuffRotation, 0, 0, 1));
             holeDisplayPuff.setTransformationMatrix(new Matrix4f().scale(0.25F, 0.25F, 0.01F).transpose().translate(-0.5F, -0.5F, 0));
-            holedisplay1.setTransformationMatrix(new Matrix4f().scale(0.1F, 0.1F, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocal(randomPuffRotation, 0, 0, 1));
+            holedisplay1.setTransformationMatrix(new Matrix4f().scale(0.1F, 0.1F, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocal(randomPuffRotation1, 0, 0, 1));
 
             holeDisplayPuff.setBlock(Material.GRAY_STAINED_GLASS.createBlockData());
 
