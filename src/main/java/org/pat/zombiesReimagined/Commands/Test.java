@@ -2,11 +2,15 @@ package org.pat.zombiesReimagined.Commands;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.type.HangingSign;
+import org.bukkit.block.data.type.Light;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MainHand;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
@@ -17,63 +21,230 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.pattyEssentialsV3.Utils;
+import org.pat.zombiesReimagined.Listeners.Interact;
+import org.pat.zombiesReimagined.Utility.MapUtils.FeatureType;
+import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
+import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
+import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
 import org.pat.zombiesReimagined.Utility.ZUtils;
+import org.w3c.dom.Text;
 
 import java.util.*;
 
 public class Test implements TabExecutor {
+
+    public static boolean useModels = true;
+
+    public static List<Entity> bulletHoles = new ArrayList<>();
+    public static int maxEntities = 200 * 2; //200
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
 
         if (sender instanceof Player p) {
 
-            TextDisplay textDisplayFront = p.getWorld().spawn(p.getLocation(), TextDisplay.class);
-            textDisplayFront.setBackgroundColor(Color.fromARGB(50, 50, 250, 50));
-            textDisplayFront.setSeeThrough(true);
-            textDisplayFront.setText("wake up babe, text displays just dropped.");
-            textDisplayFront.setBrightness(new Display.Brightness(5, 5));
-            textDisplayFront.setBillboard(Display.Billboard.FIXED);
-            textDisplayFront.setTransformationMatrix(new Matrix4f().scaleLocal(1));
-            textDisplayFront.setInterpolationDuration(200);
-            textDisplayFront.setInterpolationDelay(1);
-
-// Create a flipped version of the text display for the back side
-            TextDisplay textDisplayBack = p.getWorld().spawn(p.getLocation(), TextDisplay.class);
-            textDisplayBack.setBackgroundColor(Color.fromARGB(50, 50, 250, 50));
-            textDisplayBack.setSeeThrough(true);
-            textDisplayBack.setText("wake up babe, text displays just dropped.");
-            textDisplayBack.setBrightness(new Display.Brightness(5, 5));
-            textDisplayBack.setBillboard(Display.Billboard.FIXED);
-            textDisplayBack.setTransformationMatrix(new Matrix4f().scaleLocal(1, 1, -1));  // Flip horizontally
-            textDisplayBack.setInterpolationDuration(200);
-            textDisplayBack.setInterpolationDelay(1);
+            useModels = !useModels;
+            p.sendMessage(ColoredText.t("&7&oUse Models set to: " + useModels));
+            for (var v : MapFeature.storedStructures.entrySet()) {
+                if (v.getKey().getType() == FeatureType.GUN) {
+                    v.getKey().statusVisibilitySwap(false);
+                } else if (v.getKey().getType() == FeatureType.CHEST) {
+                    v.getKey().statusVisibilitySwap(true);
+                }
+            }
 
         }
 
         return false;
     }
 
-    public static void shootGun(Player p) {
-        float rF = 0.5f + (0.75f - 0.5f) * new Random().nextFloat();
-        Location loc = p.getEyeLocation().clone().add(p.getEyeLocation().getDirection().multiply(rF));
-        Location loc1 = p.getEyeLocation().clone().add(p.getEyeLocation().getDirection().multiply(rF + 0.01));
-        /**
-         if (new Random().nextInt(5) == 0) {
-         loc.setPitch(loc.getPitch() - 5 + new Random().nextInt(11));
-         loc.setYaw(loc.getYaw() - 5 + new Random().nextInt(11));
-         } else {
-         loc.setPitch(loc.getPitch() - 2 + new Random().nextInt(5));
-         loc.setYaw(loc.getYaw() - 2 + new Random().nextInt(5));
-         }
-         */
+    public static void textDisplaySmokeTest1(Player p) {
+        int i = 0;
+        for (float f : new float[]{-45F, 45F, -45F, 45F}) {
+
+            float scaleWidth = 0.1F;
+            float scaleLength = 100F;
+
+            Location loc = p.getEyeLocation().add(p.getEyeLocation().getDirection().normalize().multiply(0.5));
+            loc.setYaw(((loc.getYaw() - 90) + 180) % 360 - 180);
+            loc.setPitch(f);
+
+            if (i >= 2)
+                loc.setYaw(((loc.getYaw() - 180) + 180) % 360 - 180);
+
+            loc.add(loc.getDirection().normalize().multiply(scaleWidth));
+
+            TextDisplay textDisplayFront = p.getWorld().spawn(loc, TextDisplay.class);
+            textDisplayFront.setBackgroundColor(Color.fromARGB(100, 0, 0, 0));
+            textDisplayFront.setText(" ");
+            textDisplayFront.setAlignment(TextDisplay.TextAlignment.CENTER);
+            textDisplayFront.setBrightness(new Display.Brightness(5, 5));
+            textDisplayFront.setBillboard(Display.Billboard.FIXED);
+            textDisplayFront.setTransformationMatrix(new Matrix4f().scaleLocal(1));
+            textDisplayFront.setInterpolationDuration(20);
+            textDisplayFront.setInterpolationDelay(2);
+
+            int finalI = i;
+
+            float yScale = scaleWidth * 8F;
+            textDisplayFront.setTransformationMatrix(new Matrix4f().scale(scaleLength * 8, yScale, 0)
+                    .translateLocal((finalI >= 2) ? (scaleLength / 2.5188F) + 0.2999F : -(scaleLength / 1.675F) - 0.2999F, -yScale * 0.125F, 0));
+
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                //textDisplayFront.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    //textDisplayFront.remove();
+                }, 25);
+            }, 3);
+
+            i++;
+        }
+    }
+
+    public static void shootGunTest2(Player p) {
+
+        float randomIncrease = 0.5f + (0.75f - 0.5f) * new Random().nextFloat();
+        Location bulletLoc = p.getEyeLocation().clone().add(p.getEyeLocation().getDirection().multiply(randomIncrease));
+
+    }
+
+    public static void shootGunTest1(Player p, int bloom, boolean showMuzzle) {
+        float rF = 0.9f + (1.15f - 0.9f) * new Random().nextFloat();
+        Location gunLoc = p.getEyeLocation().clone();
+
+        gunLoc.setPitch(0);
+        gunLoc.setYaw(gunLoc.getYaw() + 90);
+
+        Location gunLoc1 = p.getEyeLocation().clone();
+
+        gunLoc1.setPitch(90 - p.getEyeLocation().getPitch());
+        gunLoc1.setYaw(gunLoc1.getYaw() + 180);
+
+        //gunLoc.setYaw(gunLoc.getYaw() + ((p.getMainHand() == MainHand.RIGHT) ? 32 + ((gunLoc.getPitch() == -90) ? 90:0) : -32));
+        //gunLoc.setPitch(gunLoc.getPitch() + 12);
+
+        boolean rightHand = p.getMainHand() == MainHand.RIGHT;
+
+        Location flashLoc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.212)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.465:-0.465)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
+
+        Location loc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.6:-0.6)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
+        Location loc1 = loc.clone();
+
+        //Location loc = p.getEyeLocation().clone().add(gunLoc.getDirection().multiply(rF));
+        //Location loc1 = p.getEyeLocation().clone().add(gunLoc.getDirection().multiply(rF - 0.01));
+
+        loc.getWorld().spawnParticle(Particle.SMOKE, loc.clone().add(p.getEyeLocation().getDirection().multiply(0.2)), 1, 0, 0, 0, 0.01);
+
+        p.playSound(p, Sound.BLOCK_BAMBOO_WOOD_PLACE, 1, 1);
+        p.playSound(p, Sound.BLOCK_STONE_PLACE, 1, 2);
+
+        Location hitLocation = null;
+
+        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p);
+        hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
+
+        if (hitLocation != null) {
+            Vector newVec = hitLocation.clone().toVector().subtract(loc.clone().toVector());
+            loc.setDirection(newVec);
+            loc1.setDirection(newVec);
+        }
+
+        if (showMuzzle) {
+            loc.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, loc, 2, 0, 0, 0, new Particle.DustTransition(Color.fromRGB(234, 255, 0), Color.fromRGB(199, 207, 114), 1F));
+
+            int rotateFlash = new Random().nextInt(91);
+
+            BlockDisplay muzzleFlash = loc.getWorld().spawn(flashLoc.clone().add(loc.getDirection().multiply(-0.2)), BlockDisplay.class);
+            muzzleFlash.setBrightness(new Display.Brightness(15, 15));
+            muzzleFlash.setBlock(Material.WHITE_STAINED_GLASS.createBlockData());
+            muzzleFlash.setTransformationMatrix(new Matrix4f().translate(-0.09f, -0.09F, 0).scale(0.18F, 0.18F, 0.05F).rotateLocalZ(rotateFlash));
+
+            BlockDisplay muzzleFlash1 = loc.getWorld().spawn(flashLoc.clone().add(loc.getDirection().multiply(-0.2)), BlockDisplay.class);
+            muzzleFlash1.setBrightness(new Display.Brightness(15, 15));
+            muzzleFlash1.setBlock(Material.WHITE_STAINED_GLASS.createBlockData());
+            muzzleFlash1.setTransformationMatrix(new Matrix4f().translate(-0.09f, -0.09F, 0).scale(0.18F, 0.18F, 0.05F).rotateLocalZ(rotateFlash + 45));
+
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                muzzleFlash.setBlock(Material.YELLOW_STAINED_GLASS.createBlockData());
+                muzzleFlash1.setBlock(Material.YELLOW_STAINED_GLASS.createBlockData());
+            }, 3);
+
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                muzzleFlash.remove();
+                muzzleFlash1.remove();
+            }, 4);
+
+            // LIGHT FLASH
+            Location lightFlashLoc = p.getEyeLocation();
+            if (lightFlashLoc.getBlock().getType() == Material.AIR) {
+                lightFlashLoc.getBlock().setType(Material.LIGHT);
+                Light light = (Light) lightFlashLoc.getBlock().getBlockData();
+                light.setLevel(7);
+                lightFlashLoc.getBlock().setBlockData(light);
+                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    lightFlashLoc.getBlock().setType(Material.AIR);
+                }, 2);
+            }
+        }
+
+        if (bloom > 0) {
+            /**
+             if (new Random().nextInt(5) == 0) {
+             float pitch = loc.getPitch() - bloom / 2 + new Random().nextInt(bloom + 1);
+             float yaw = loc.getYaw() - bloom / 2 + new Random().nextInt(bloom + 1);
+             loc.setPitch(pitch);
+             loc.setYaw(yaw);
+             loc1.setPitch(pitch);
+             loc1.setYaw(yaw);
+             } else {
+             float pitch = loc.getPitch() - bloom / 4 + new Random().nextInt(bloom / 2 + 1);
+             float yaw = loc.getYaw() - bloom / 4 + new Random().nextInt(bloom / 2 + 1);
+             loc.setPitch(pitch);
+             loc.setYaw(yaw);
+             loc1.setPitch(pitch);
+             loc1.setYaw(yaw);
+             }
+             */
+            Random rand = new Random();
+
+            //float radius = bloom * (rand.nextFloat() * 0.5f + 0.5f);
+            float radius = bloom * (float) Math.pow(rand.nextFloat(), 0.75f);
+
+            float theta = rand.nextFloat() * 2 * (float) Math.PI;
+            float phi = (float) Math.acos(2 * rand.nextFloat() - 1);
+
+            //float offsetX = radius * (float)Math.sin(phi) * (float)Math.cos(theta); // X offset for yaw
+            float offsetY = radius * (float) Math.sin(phi) * (float) Math.sin(theta); // Y offset for yaw
+            float offsetZ = radius * (float) Math.cos(phi); // Z offset for pitch
+
+            Location placeholderLoc = p.getEyeLocation().clone();
+
+            placeholderLoc.setPitch(0);
+            placeholderLoc.setYaw(placeholderLoc.getYaw() + 90);
+
+            Location placeholderLoc1 = p.getEyeLocation().clone();
+
+            placeholderLoc1.setPitch(90 - p.getEyeLocation().getPitch());
+            placeholderLoc1.setYaw(placeholderLoc1.getYaw() + 180);
+
+            Location offsetLoc = loc.clone().add(loc.getDirection().multiply(100)).add(placeholderLoc1.getDirection().multiply(offsetY)).add(placeholderLoc.getDirection().multiply(offsetZ)); //.add(gunLoc1.getDirection()
+
+            Vector offsetVec = offsetLoc.toVector().subtract(loc.toVector());
+
+            loc.setDirection(offsetVec);
+            loc1.setDirection(offsetVec);
+        }
+
+        Object[] variables = getLookingAtBlockSpot(loc, p);
+        double distance = (double) (variables.length > 0 ? variables[0] : null);
+        hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
 
         BlockDisplay display = (BlockDisplay) p.getWorld().spawnEntity(loc, EntityType.BLOCK_DISPLAY);
         BlockDisplay display1 = (BlockDisplay) p.getWorld().spawnEntity(loc1, EntityType.BLOCK_DISPLAY);
 
-        display.setBlock(Material.GRAY_STAINED_GLASS.createBlockData());
-        display1.setBlock(Material.BLACK_STAINED_GLASS.createBlockData());
+        display1.setBlock(Material.GOLD_BLOCK.createBlockData());
         display.setViewRange(256);
         display1.setViewRange(256);
         display.setBillboard(Display.Billboard.FIXED);
@@ -92,29 +263,25 @@ public class Test implements TabExecutor {
 
         AxisAngle4f angle = new AxisAngle4f(new Random().nextInt(361), 0, 0, 1);
 
-        Location hitLocation = null;
-
-        Object[] variables = getLookingAtBlockSpot(loc);
-        double distance = (double) (variables.length > 0 ? variables[0] : null);
-        hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
-
         display.setTransformationMatrix(new Matrix4f().scale(randomValue, randomValue, (float) distance).transpose().translate(-0.5F + (randomValue / 4), -0.5F + (randomValue / 4), 0).rotateLocal(randomRotation, 0, 0, 1));
         display1.setTransformationMatrix(new Matrix4f().scale(randomValue / 2, randomValue / 2, (float) distance).transpose().translate(-0.5F + (randomValue / 4), -0.5F + (randomValue / 4), 0));
         //if (e.getValue() != null)
         //p.getWorld().createExplosion(e.getValue(), Double.valueOf(args[0]).floatValue());
 
         Utils.scheduler.runTaskLater(Utils.plugin, () -> {
-            display.setTransformationMatrix(new Matrix4f().scale(randomValue+0.03F, randomValue+0.03F, (float) distance).transpose().translate(-0.5F + (randomValue / 4), -0.5F + (randomValue / 4), 0).rotateLocal(randomRotation, 0, 0, 1));
+            display.setTransformationMatrix(new Matrix4f().scale(randomValue + 0.03F, randomValue + 0.03F, (float) distance).transpose().translate(-0.5F + (randomValue / 4), -0.5F + (randomValue / 4), 0).rotateLocal(randomRotation, 0, 0, 1));
         }, 2);
 
         BukkitTask task = null;
 
         if (variables.length == 3) {
             LivingEntity entity = (LivingEntity) variables[2];
-            if (p != entity) {
+            if (p != entity && entity.getHealth() > 0) {
+                p.playSound(p, Sound.ENTITY_ARROW_HIT_PLAYER, 0.3F, 1.5F);
                 entity.damage(0);
                 entity.setHealth(entity.getHealth() > 5 ? entity.getHealth() - 5 : 0);
                 p.getWorld().spawnParticle(Particle.BLOCK, hitLocation, 10, 0.2, 0.2, 0.2, Material.REDSTONE_BLOCK.createBlockData());
+                loc.getWorld().spawnParticle(Particle.DUST_PILLAR, hitLocation, 1, 0.1, 0.1, 0.1, Material.REDSTONE_BLOCK.createBlockData());
             }
         }
 
@@ -169,13 +336,34 @@ public class Test implements TabExecutor {
             holeLocation.setYaw(yaw);
             //holeLocation.setDirection(holeVec);
 
-            p.getWorld().playSound(holeLocation, hitLocation.getBlock().getBlockSoundGroup().getBreakSound(), 0.02F, 0.9F);
+            Location lightFlashLoc = holeLocation;
+            if (lightFlashLoc.getBlock().getType() == Material.AIR) {
+                lightFlashLoc.getBlock().setType(Material.LIGHT);
+                Light light = (Light) lightFlashLoc.getBlock().getBlockData();
+                light.setLevel(4);
+                lightFlashLoc.getBlock().setBlockData(light);
+                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    lightFlashLoc.getBlock().setType(Material.AIR);
+                }, 2);
+            }
 
-            p.getWorld().spawnParticle(Particle.BLOCK, holeLocation, 5, 0.1, 0.1, 0.1, hitLocation.getBlock().getType().createBlockData());
+            p.getWorld().playSound(holeLocation, hitLocation.getBlock().getBlockSoundGroup().getBreakSound(), 0.02F, 0.9F);
+            if (new Random().nextInt(30) == 9) {
+                p.getWorld().playSound(hitLocation, Sound.ITEM_TRIDENT_RETURN, 1F, 1.7F);
+                p.getWorld().playSound(hitLocation, Sound.ITEM_TRIDENT_RETURN, 1F, 2F);
+                p.getWorld().playSound(hitLocation, Sound.ITEM_TRIDENT_HIT_GROUND, 1F, 2F);
+            }
+
+            p.getWorld().spawnParticle(Particle.BLOCK, holeLocation, 3, 0.1, 0.1, 0.1, hitLocation.getBlock().getType().createBlockData());
+            loc.getWorld().spawnParticle(Particle.DUST_PILLAR, holeLocation, 1, 0.1, 0.1, 0.1, hitLocation.getBlock().getType().createBlockData());
+            loc.getWorld().spawnParticle(Particle.FALLING_DUST, holeLocation, 2, 0.2, 0.2, 0.2, hitLocation.getBlock().getType().createBlockData());
 
             BlockDisplay holedisplay = (BlockDisplay) p.getWorld().spawnEntity(holeLocation, EntityType.BLOCK_DISPLAY);
             BlockDisplay holedisplay1 = (BlockDisplay) p.getWorld().spawnEntity(holeLocation.clone().add(holeVec.clone().multiply(0.99)), EntityType.BLOCK_DISPLAY);
             BlockDisplay holeDisplayPuff = (BlockDisplay) p.getWorld().spawnEntity(holeLocation, EntityType.BLOCK_DISPLAY);
+
+            bulletHoles.add(holedisplay);
+            bulletHoles.add(holedisplay1);
 
             holedisplay.setBlock(Material.GRAY_STAINED_GLASS.createBlockData());
             holedisplay1.setBlock(Material.BLACK_STAINED_GLASS.createBlockData());
@@ -187,16 +375,27 @@ public class Test implements TabExecutor {
             holedisplay1.setBrightness(new Display.Brightness(15, 15));
             holeDisplayPuff.setBrightness(new Display.Brightness(0, 0));
 
-            int randomPuffRotation = new Random().nextInt(361);
-            int randomPuffRotation1 = new Random().nextInt(361);
-            holedisplay.setTransformationMatrix(new Matrix4f().scale(0.25F, 0.25F, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocal(randomPuffRotation, 0, 0, 1));
-            holeDisplayPuff.setTransformationMatrix(new Matrix4f().scale(0.25F, 0.25F, 0.01F).transpose().translate(-0.5F, -0.5F, 0));
-            holedisplay1.setTransformationMatrix(new Matrix4f().scale(0.1F, 0.1F, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocal(randomPuffRotation1, 0, 0, 1));
+            int randomPuffRotation = new Random().nextInt(91);
+            float randomSize = new Random().nextFloat(11)/100; //0.25
+            holedisplay.setTransformationMatrix(new Matrix4f().scale(0.16F + randomSize, 0.16F + randomSize, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(randomPuffRotation)));
+            holeDisplayPuff.setTransformationMatrix(new Matrix4f().scale(0).transpose().translate(-0.5F, -0.5F, 0));
+            holedisplay1.setTransformationMatrix(new Matrix4f().scale(0.04F + randomSize, 0.04F + randomSize, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(randomPuffRotation + new Random().nextInt(26))));
 
             holeDisplayPuff.setBlock(Material.GRAY_STAINED_GLASS.createBlockData());
 
             holeDisplayPuff.setInterpolationDuration(5); // 20 ticks = 1 second
             holeDisplayPuff.setInterpolationDelay(1);  // 40
+
+            if (bulletHoles.size() > maxEntities) {
+                for (Entity entity : bulletHoles) {
+                    entity.remove();
+                }
+                bulletHoles.clear();
+            }
+
+            Utils.scheduler.runTaskLater(Utils.plugin, () -> {
+                display.setBlock(Material.GRAY_STAINED_GLASS.createBlockData());
+            }, 2);
 
             Utils.scheduler.runTaskLater(Utils.plugin, () -> {
                 holeDisplayPuff.setTransformationMatrix(new Matrix4f().scale(1F, 1F, 0.6F).transpose().translate(-0.5F, -0.5F, 0));
@@ -208,6 +407,8 @@ public class Test implements TabExecutor {
             }, 6);
 
             Utils.scheduler.runTaskLater(Utils.plugin, () -> {
+                bulletHoles.remove(holedisplay);
+                bulletHoles.remove(holedisplay1);
                 holedisplay.remove();
                 holedisplay1.remove();
             }, 260); //25
@@ -218,16 +419,31 @@ public class Test implements TabExecutor {
         }, 3);
 
         Utils.scheduler.runTaskLater(Utils.plugin, () -> {
-            display.setBlock(Material.WHITE_STAINED_GLASS.createBlockData());
+            //display.setBlock(Material.WHITE_STAINED_GLASS.createBlockData());
         }, 7);
+
+        Utils.scheduler.runTaskLater(Utils.plugin, () -> {
+            display1.remove();
+        }, 4);
 
         BukkitTask finalTask = task;
         Utils.scheduler.runTaskLater(Utils.plugin, () -> {
             display.remove();
-            display1.remove();
             if (finalTask != null)
                 finalTask.cancel();
-        }, 12);
+        }, 8);
+
+    }
+
+    public static BlockDisplay createBlock(Material mat, Location loc) {
+
+        BlockDisplay blockDisplay = loc.getWorld().spawn(loc, BlockDisplay.class);
+        blockDisplay.setBlock(mat.createBlockData());
+        blockDisplay.setInterpolationDelay(1);
+        blockDisplay.setBillboard(Display.Billboard.FIXED);
+        blockDisplay.setBrightness(new Display.Brightness(15, 15));
+
+        return blockDisplay;
 
     }
 
@@ -235,7 +451,7 @@ public class Test implements TabExecutor {
         return targetLocation.distance(faceLocation);
     }
 
-    public static Object[] getLookingAtBlockSpot(Location loc) {
+    public static Object[] getLookingAtBlockSpot(Location loc, Player p) {
         // Step 1: Get player's eye location and the direction they are looking
         Location eyeLocation = loc;
         Vector direction = eyeLocation.getDirection();
@@ -250,12 +466,14 @@ public class Test implements TabExecutor {
 
             for (LivingEntity entity : currentLocation.getNearbyLivingEntities(0.5, 0.5, 0.5)) {
                 if (entity.getBoundingBox().contains(currentLocation.toVector())) {
-                    return new Object[]{distance, currentLocation, entity};
+                    if (entity != p && entity.getHealth() > 0) {
+                        return new Object[]{distance, currentLocation, entity};
+                    }
                 }
             }
 
             // Step 5: Check if the block is solid (not air)
-            if (currentLocation.getBlock().getType() != Material.AIR) {
+            if (currentLocation.getBlock().getType() != Material.AIR && currentLocation.getBlock().getType() != Material.LIGHT) {
                 // Add the exact distance and location to the HashMap
                 return new Object[]{distance, currentLocation};
             }

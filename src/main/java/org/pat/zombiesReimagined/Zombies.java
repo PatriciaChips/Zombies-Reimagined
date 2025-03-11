@@ -5,7 +5,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.pat.zombiesReimagined.Commands.Test;
 import org.pat.zombiesReimagined.Commands.ZombiesItems;
 import org.pat.zombiesReimagined.Listeners.Interact;
+import org.pat.zombiesReimagined.Listeners.Join;
+import org.pat.zombiesReimagined.Listeners.SwapItem;
 import org.pat.zombiesReimagined.Utility.FlatChunkGen;
+import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.Selection;
+import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
 
 public final class Zombies extends JavaPlugin {
 
@@ -20,12 +24,20 @@ public final class Zombies extends JavaPlugin {
 
         /** Initialize listeners */
         getServer().getPluginManager().registerEvents(new Interact(), this);
+        getServer().getPluginManager().registerEvents(new SwapItem(), this);
+        getServer().getPluginManager().registerEvents(new Join(), this);
 
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+
+        SpawnStructure.reset(null);
+
+        for (var selectionDisplay : Selection.selectionDisplay.entrySet()) {
+            selectionDisplay.getValue().remove();
+        }
+
     }
 
     public static World createPracticeWorld() {

@@ -8,31 +8,30 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.pat.pattyEssentialsV3.Utils;
-import org.pat.zombiesReimagined.Utility.CustomItem.Item;
-import org.pat.zombiesReimagined.Utility.CustomItem.UseType;
+import org.pat.zombiesReimagined.Utility.ItemUtils.Guns;
+import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
+import org.pat.zombiesReimagined.Utility.ItemUtils.UseType;
+import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
+import org.pat.zombiesReimagined.Utility.ZUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ZombiesItems implements TabExecutor {
 
+    public static List<ItemStack> devItems = new ArrayList<>(List.of(new Item[] {
+            new Item(UseType.DEV, "&fSelection Wand", Material.STICK, 1, "selection_wand"),
+            new Item(UseType.DEV, "&fExecute Task", Material.BLAZE_ROD, 1, "execution_wand"),
+            new Item(UseType.DEV, "&fReset Task", Material.BREEZE_ROD, 1, "reset_wand")
+    }));
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
 
         if (sender instanceof Player p) {
-            List<ItemStack> devItems = new ArrayList<>(List.of(new Item[] {
-                    new Item(UseType.DEV, "&fSelection Wand", Material.STICK, 1, "selection_wand"),
-                    new Item(UseType.DEV, "&fExecute Task", Material.BLAZE_ROD, 1, "execution_wand"),
-                    new Item(UseType.DEV, "&fReset Task", Material.BREEZE_ROD, 1, "reset_wand")
-            }));
-
-            List<ItemStack> gunItems = new ArrayList<>(List.of(new Item[] {
-                    new Item(UseType.GUN, "&fAssault Rifle", Material.IRON_HOE, 1, "rifle", 10, 10, 10, 10),
-                    new Item(UseType.GUN, "&fSniper", Material.NETHERITE_HOE, 1, "sniper", 10, 10, 10, 10),
-            }));
 
             Inventory inv = Bukkit.createInventory(p, 27, "Custom items");
 
@@ -40,8 +39,13 @@ public class ZombiesItems implements TabExecutor {
                 inv.setItem(i, devItems.get(i));
             }
 
-            for (int i = 0; i <= 8 && i < gunItems.size(); i++) {
-                inv.setItem(18 + i, gunItems.get(i));
+            for (int i = 0; i <= 17 && i < Guns.gunArray.length; i++) {
+                ItemStack gunItem = new Item(UseType.GUN, Guns.gunArray[i].getItemMeta().getDisplayName(),
+                        Guns.gunArray[i].getType(),
+                        1,
+                        Guns.gunArray[i].getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING),
+                        Test.useModels);
+                inv.setItem(9 + i, gunItem);
             }
 
             p.openInventory(inv);
