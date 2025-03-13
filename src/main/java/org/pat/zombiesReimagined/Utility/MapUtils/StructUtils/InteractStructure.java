@@ -110,7 +110,7 @@ public class InteractStructure {
                                     feature.addContainedPlayers(p);
                                     feature.statusVisibilitySwap(false);
                                     p.sendMessage(feature.getKey());
-                                    ItemStack gunItem = new Item(UseType.GUN, feature.getName(), feature.getMaterial(), 1, feature.getKey(), Test.useModels);
+                                    ItemStack gunItem = new Item(UseType.GUN, feature.getName(), feature.getMaterial(), feature.getKey(), Test.useModels).getItemStack();
                                     p.getEquipment().setItemInMainHand(gunItem);
 
                                     dispenseItems(p, loc, new ItemStack[]{gunItem});
@@ -234,10 +234,10 @@ public class InteractStructure {
                                             i = 0;
                                             ItemStack changeItem = null;
                                             do {
-                                                changeItem = Guns.gunArray[new Random().nextInt(Guns.gunArray.length)];
-                                            } while (changeItem.equals(currentGun));  // Keep looping until we get a different item
-                                            pack.setItemStack(new Item(UseType.GUN, changeItem.getItemMeta().getDisplayName(), changeItem.getType(), 1, changeItem.getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING), true));
-                                            packless.setItemStack(new Item(UseType.GUN, changeItem.getItemMeta().getDisplayName(), changeItem.getType(), 1, changeItem.getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING), false));
+                                                changeItem = Guns.gunArray[new Random().nextInt(Guns.gunArray.length)].getItemStack();
+                                            } while (changeItem.equals(currentGun));
+                                            pack.setItemStack(new Item(UseType.GUN, changeItem.getItemMeta().getDisplayName(), changeItem.getType(), changeItem.getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING), true).getItemStack());
+                                            packless.setItemStack(new Item(UseType.GUN, changeItem.getItemMeta().getDisplayName(), changeItem.getType(), changeItem.getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING), false).getItemStack());
                                             currentGun = changeItem;
                                         }
 

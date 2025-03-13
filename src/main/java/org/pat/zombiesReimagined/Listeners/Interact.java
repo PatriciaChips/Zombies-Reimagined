@@ -49,28 +49,32 @@ public class Interact implements Listener {
         if (e.getHand() == EquipmentSlot.OFF_HAND)
             return;
 
-        if (e.getAction().isRightClick()) {
+        if (!(item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(ZUtils.key, PersistentDataType.STRING))) { // ITEM LACKS DATA RUN STRUCTURE INTERACT CHECK
 
-            if (!(item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(ZUtils.key, PersistentDataType.STRING))) { // ITEM LACKS DATA RUN STRUCTURE INTERACT CHECK
-
+            if (e.getAction().isRightClick()) {
                 InteractStructure.interact(e, block, p); /** Run utils for interacted structures */
+            }
 
-            } else {
-                if (item != null) {
-                    e.setCancelled(true); // item != null, assume use as gun || dev-tool
-                    String key = item.getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING);
+        } else {
+            if (item != null) {
+                e.setCancelled(true); // item != null, assume use as gun || dev-tool
+                String key = item.getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING);
 
-                    if (Guns.gunInteract(e, p, key)) // Item matchs a gun, stop code
+                boolean isReload = e.getAction().isLeftClick();
+
+                if (Guns.gunInteract(e, p, item, key, isReload)) // Item matches a gun, stop code
+                    return;
+
+                if (e.getAction().isRightClick()) {
+                    if (Dev.devToolInteract(e, block, p, key)) // Item matches a dev-tool, stop code
                         return;
-
-                    if (Dev.devToolInteract(e, block, p, key)) // Item matchs a dev-tool, stop code
-                        return;
-
                 }
 
             }
-        }
 
+        }
     }
 
 }
+
+

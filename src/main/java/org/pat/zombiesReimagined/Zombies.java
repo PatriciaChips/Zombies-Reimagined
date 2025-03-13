@@ -1,15 +1,23 @@
 package org.pat.zombiesReimagined;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.zombiesReimagined.Commands.Test;
 import org.pat.zombiesReimagined.Commands.ZombiesItems;
 import org.pat.zombiesReimagined.Listeners.Interact;
 import org.pat.zombiesReimagined.Listeners.Join;
 import org.pat.zombiesReimagined.Listeners.SwapItem;
 import org.pat.zombiesReimagined.Utility.FlatChunkGen;
+import org.pat.zombiesReimagined.Utility.ItemUtils.Guns;
+import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
 import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.Selection;
 import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
+import org.pat.zombiesReimagined.Utility.ZUtils;
 
 public final class Zombies extends JavaPlugin {
 
@@ -26,6 +34,23 @@ public final class Zombies extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new Interact(), this);
         getServer().getPluginManager().registerEvents(new SwapItem(), this);
         getServer().getPluginManager().registerEvents(new Join(), this);
+
+        new BukkitRunnable() {
+            public void run() {
+
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    ItemStack itemStack = player.getInventory().getItemInMainHand();
+                    if (itemStack != null && Guns.registeredGuns.containsKey(itemStack)) {
+                        Item gun = Guns.registeredGuns.get(itemStack);
+                        player.sendActionBar(Component.text(ColoredText.t("&7" + gun.getAmmo() + " / " + gun.getMagSize())));
+                        player.setLevel(gun.getExtraAmmo());
+                        player.setExp(0);
+                        player.setExp(gun.getAmmo() == gun.getMagSize() ? 1 : (float) gun.getAmmo()/(float) gun.getMagSize());
+                    }
+                }
+
+            }
+        }.runTaskTimer(ZUtils.plugin, 0L, 0L);
 
     }
 

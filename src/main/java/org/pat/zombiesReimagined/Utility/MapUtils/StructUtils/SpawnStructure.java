@@ -15,8 +15,6 @@ import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.ZUtils;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 public class SpawnStructure {
@@ -132,18 +130,18 @@ public class SpawnStructure {
                     ammoModelPack.setTransformationMatrix(new Matrix4f().scaleLocal(0.75F));
 
                     ItemDisplay smallerModelPackless = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), ItemDisplay.class);
-                    smallerModelPackless.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), 1, feature.getKey(), false));
+                    smallerModelPackless.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), feature.getKey(), false).getItemStack());
                     smallerModelPackless.setTransformationMatrix(new Matrix4f().scaleLocal(0.85F).translate(0.5F, 0, 0));
 
                     ItemDisplay smallerModelPack = loc.getWorld().spawn(loc.clone().add(0, 0, 0).add(loc.getDirection().multiply(-0.501)), ItemDisplay.class);
-                    smallerModelPack.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), 1, feature.getKey(), true));
+                    smallerModelPack.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), feature.getKey(), true).getItemStack());
                     smallerModelPack.setTransformationMatrix(new Matrix4f().scaleLocal(1.2F).translate(0, 0.4F, 0).rotateY((float) Math.toRadians(90)));
 
                     ItemDisplay gunItemPackless = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), ItemDisplay.class);
-                    gunItemPackless.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), 1, feature.getKey(), false));
+                    gunItemPackless.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), feature.getKey(), false).getItemStack());
 
                     ItemDisplay gunItemPack = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), ItemDisplay.class);
-                    gunItemPack.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), 1, feature.getKey(), true));
+                    gunItemPack.setItemStack(new Item(UseType.GUN, feature.getName(), feature.getMaterial(), feature.getKey(), true).getItemStack());
                     gunItemPack.setTransformationMatrix(new Matrix4f().scaleLocal(1.4F).translate(0, 0.2F, 0).rotateY((float) Math.toRadians(90)));
 
                     loc.add(0, -1.1, 0);
@@ -329,12 +327,12 @@ public class SpawnStructure {
                     hangingSign.setTransformationMatrix(new Matrix4f().scaleLocal(1.5F, 0.45F, 0.13F).translate(-0.5F, -1.7F, 0.7F).rotateLocalX(0F));
 
                     ItemDisplay itemDisplayPackless = p.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(f + 0.01)), ItemDisplay.class);
-                    itemDisplayPackless.setItemStack(new Item(UseType.GUN, "minigun", Material.IRON_HOE, 1, "deagle", false));
+                    itemDisplayPackless.setItemStack(new Item(UseType.GUN, "minigun", Material.IRON_HOE, "deagle", false).getItemStack());
                     itemDisplayPackless.setTransformationMatrix(new Matrix4f().scale(0.3F).translate(0.08F, -4.4F, 0.13F).rotateZ(79.318F));
                     //itemDisplayPackless.setTransformationMatrix(new Matrix4f().scale(1.3F).translate(0.08F, -0.4F, 0.13F).rotateZ(79.318F));
 
                     ItemDisplay itemDisplayPack = p.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(f + 0.01)), ItemDisplay.class);
-                    itemDisplayPack.setItemStack(new Item(UseType.GUN, "minigun", Material.IRON_HOE, 1, "minigun", true));
+                    itemDisplayPack.setItemStack(new Item(UseType.GUN, "minigun", Material.IRON_HOE, "minigun", true).getItemStack());
                     itemDisplayPack.setTransformationMatrix(new Matrix4f().scaleLocal(0.3F).translate(-0.13F, -4.3F, 0F).rotateLocalY((float) Math.toRadians(90)));
                     //itemDisplayPack.setTransformationMatrix(new Matrix4f().scaleLocal(1.5F).translate(-0.13F, -0.15F, 0F).rotateLocalY((float) Math.toRadians(90)));
 

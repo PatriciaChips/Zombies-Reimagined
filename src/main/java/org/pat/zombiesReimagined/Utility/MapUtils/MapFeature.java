@@ -43,7 +43,7 @@ public class MapFeature implements Cloneable {
 
     // Constructor for GUN shop
     public MapFeature(FeatureType gun, int gunCost, int ammoCost, String key) {
-        ItemStack item = Guns.getGunFromKey(key);
+        ItemStack item = Guns.getGunFromKey(key).getItemStack();
         this.type = gun;
         this.cost = gunCost;
         this.cost1 = ammoCost;

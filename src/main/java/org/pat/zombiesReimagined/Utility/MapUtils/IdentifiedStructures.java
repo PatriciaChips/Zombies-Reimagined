@@ -36,6 +36,12 @@ public class IdentifiedStructures {
         /** ARMOUR */ //GLASS
         armourIndentifiers.put(Material.GREEN_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Leather Armour", Material.LEATHER, true));
         armourIndentifiers.put(Material.LIME_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Leather Armour", Material.LEATHER, false));
+        armourIndentifiers.put(Material.YELLOW_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Chain Armour", Material.CHAIN, true));
+        armourIndentifiers.put(Material.ORANGE_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Chain Armour", Material.CHAIN, false));
+        armourIndentifiers.put(Material.BLUE_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Gold Armour", Material.GOLD_INGOT, true));
+        armourIndentifiers.put(Material.LIGHT_BLUE_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Gold Armour", Material.GOLD_INGOT, false));
+        armourIndentifiers.put(Material.GRAY_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Iron Armour", Material.IRON_INGOT, true));
+        armourIndentifiers.put(Material.LIGHT_GRAY_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Iron Armour", Material.IRON_INGOT, false));
 
         /** UNLOCK DOOR */ //WOOD
         unlockDoorIndentifiers.put(Material.OAK_LOG, new MapFeature(FeatureType.UNLOCK_DOOR, 500, "Motel", "Garage", 250));
