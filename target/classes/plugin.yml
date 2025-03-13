@@ -1,0 +1,12 @@
+name: Zombies-Reimagined
+version: '0'
+main: org.pat.zombiesReimagined.Zombies
+api-version: '1.21'
+authors: [ PatriciaChips ]
+depend:
+  - PattyEssentialsV3
+commands:
+  ztest:
+    permission: zombies.dev
+  zitems:
+    permission: zombies.dev
