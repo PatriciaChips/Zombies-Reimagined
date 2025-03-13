@@ -27,14 +27,14 @@ public class Guns {
             new Item(UseType.GUN, "Minigun", Material.NETHERITE_HOE, "minigun", false, 50, 4, 250, 250, 4, 25, 0),
             new Item(UseType.GUN, "Shotgun", Material.IRON_AXE, "shotgun", false, 10, 18, 6, 50, 11, 5, 1),
             new Item(UseType.GUN, "Deagle", Material.IRON_HOE, "deagle", false, 100, 0, 12, 100, 7, 20, 0),
-            new Item(UseType.GUN, "Double Shotgun", Material.DIAMOND_AXE, "double_shotgun", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "Grenade Launcher", Material.NETHERITE_SHOVEL, "grenade_launcher", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "LMG", Material.IRON_PICKAXE, "lmg", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "MK-47", Material.NETHERITE_PICKAXE, "mk47", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, 100, 0, 30, 1, 10, 0, 100),
-            new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, 100, 0, 30, 1, 10, 0, 100)
+            new Item(UseType.GUN, "Double Shotgun", Material.DIAMOND_AXE, "double_shotgun", false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Grenade Launcher", Material.NETHERITE_SHOVEL, "grenade_launcher", false, 100, 4, 30, 450, 0, 1, 0),
+            new Item(UseType.GUN, "LMG", Material.IRON_PICKAXE, "lmg", false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "MK-47", Material.NETHERITE_PICKAXE, "mk47", false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, 20, 0, 1, 20, 0, 20, 0),
+            new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, 100, 0, 30, 1, 10, 10, 0)
     };
 
     public static Item getGunFromKey(String key) {
@@ -119,8 +119,12 @@ public class Guns {
                 return true;
             }
 
-            if (cItem != null && cItem.getAmmo() == 0)
+            if (cItem != null && cItem.getAmmo() == 0) {
+                p.playSound(p, Sound.ITEM_BUNDLE_DROP_CONTENTS, 0.3F, 2);
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_SNARE, 0.2F, 0);
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 0.2F, 1.5F);
                 return true;
+            }
 
             switch (key) {
                 /** GUNS */
@@ -155,7 +159,7 @@ public class Guns {
                     Test.shootGunTest1(p, item, true, true, true);
                     break;
                 case "grenade_launcher":
-                    Test.shootGunTest1(p, item, true, true, true);
+                    Test.shootExplosive1(p, item, false);
                     break;
                 case "lmg":
                     Test.shootGunTest1(p, item, true, true, true);
@@ -170,7 +174,7 @@ public class Guns {
                     Test.shootGunTest1(p, item, true, true, true);
                     break;
                 case "rpg":
-                    Test.shootGunTest1(p, item, true, true, true);
+                    Test.shootExplosive(p, item, true);
                     break;
                 case "smg":
                     Test.shootGunTest1(p, item, true, true, true);

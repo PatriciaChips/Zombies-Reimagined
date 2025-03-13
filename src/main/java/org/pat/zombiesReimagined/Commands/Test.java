@@ -39,6 +39,7 @@ import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
 import org.pat.zombiesReimagined.Utility.ZUtils;
 import org.w3c.dom.Text;
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class Test implements TabExecutor {
@@ -54,15 +55,15 @@ public class Test implements TabExecutor {
         if (sender instanceof Player p) {
 
             /**
-            useModels = !useModels;
-            p.sendMessage(ColoredText.t("&7&oUse Models set to: " + useModels));
-            for (var v : MapFeature.storedStructures.entrySet()) {
-                if (v.getKey().getType() == FeatureType.GUN) {
-                    v.getKey().statusVisibilitySwap(false);
-                } else if (v.getKey().getType() == FeatureType.CHEST) {
-                    v.getKey().statusVisibilitySwap(true);
-                }
-            }
+             useModels = !useModels;
+             p.sendMessage(ColoredText.t("&7&oUse Models set to: " + useModels));
+             for (var v : MapFeature.storedStructures.entrySet()) {
+             if (v.getKey().getType() == FeatureType.GUN) {
+             v.getKey().statusVisibilitySwap(false);
+             } else if (v.getKey().getType() == FeatureType.CHEST) {
+             v.getKey().statusVisibilitySwap(true);
+             }
+             }
              */
 
             p.sendMessage(Guns.registeredGuns.size() + "");
@@ -122,6 +123,192 @@ public class Test implements TabExecutor {
 
     }
 
+    public static void shootExplosive1(Player p, ItemStack item, boolean isRocket) {
+        Item gun = Item.getItem(item);
+        float bloom = gun.getBloom();
+
+        boolean addCooldown = false;
+
+        if (Guns.shootCooldown.contains(item)) {
+            return;
+        } else {
+            addCooldown = true;
+        }
+
+        gun.setAmmo((gun.getAmmo() - 1 < 0) ? 0 : gun.getAmmo() - 1);
+        Guns.registeredGuns.remove(item);
+        //gun.setItemMetaData(UseType.GUN, item, item.getItemMeta().getDisplayName());
+        if (addCooldown) {
+            //gun.setDurability(item);
+            Guns.shootCooldown.add(item);
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                Guns.shootCooldown.remove(item);
+            }, gun.getFireRate());
+        }
+        Guns.registeredGuns.put(item, gun);
+
+        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
+
+        // GRENADE METHOD AKA REWRITE FOR BELOW METHOD USING NO SNOWBALLS
+        // GRENADE TO BOUNCE OFF BLOCKS
+        // EXPLODE ON ENTITY SETTING
+        // PASS-THRU ENTITY SETTING
+        // BOUNCE OFF ENTITY SETTING
+        // USE RANGE TO DETERMINE WHEN TO EXPLODE
+        // USE FIRST BLOCK DISPLAY TRAIL METHOD FROM BELOW METHOD (TO BEING WITH)
+        // CREATE METHOD FOR EXPLOSION PARTICLES AKA QUICK PARTICLES WITH TRAIL DISPLAY AND A GLOWING BALL
+        // ABOVE COMMENT TO BE CONSIDERED FOR BULLET RICOCHETS
+
+    }
+
+    public static void shootExplosive(Player p, ItemStack item, boolean isRocket) {
+
+        Item gun = Item.getItem(item);
+        float bloom = gun.getBloom();
+
+        boolean addCooldown = false;
+
+        if (Guns.shootCooldown.contains(item)) {
+            return;
+        } else {
+            addCooldown = true;
+        }
+
+        gun.setAmmo((gun.getAmmo() - 1 < 0) ? 0 : gun.getAmmo() - 1);
+        Guns.registeredGuns.remove(item);
+        //gun.setItemMetaData(UseType.GUN, item, item.getItemMeta().getDisplayName());
+        if (addCooldown) {
+            //gun.setDurability(item);
+            Guns.shootCooldown.add(item);
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                Guns.shootCooldown.remove(item);
+            }, gun.getFireRate());
+        }
+        Guns.registeredGuns.put(item, gun);
+
+        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
+
+        Snowball ball = loc.getWorld().spawn(loc, Snowball.class);
+        ball.setVelocity(loc.getDirection().normalize().multiply(1.2));
+
+        if (isRocket)
+            ball.setGravity(false);
+
+        ball.setInvulnerable(true);
+
+        List<Entity> particles = new ArrayList<>();
+
+        new BukkitRunnable() {
+            public void run() {
+
+                if (loc.distance(ball.getLocation()) >= gun.getRange())
+                    ball.remove();
+
+                Location dirLoc = ball.getLocation();
+                dirLoc.setDirection(ball.getVelocity());
+                dirLoc.add(0, 0.15, 0);
+
+                /**
+                 BlockDisplay blockDisplay1 = loc.getWorld().spawn(dirLoc, BlockDisplay.class);
+                 blockDisplay1.setBlock(Material.LIGHT_GRAY_STAINED_GLASS.createBlockData());
+                 blockDisplay1.setTransformationMatrix(new Matrix4f().scale(0.25f + (new Random().nextInt(15) / 100), 0.25F + (new Random().nextInt(15) / 100), (float) dirLoc.distance(dirLoc.clone().add(ball.getVelocity()))).translate(-0.5F, -0.5F, -(float) (dirLoc.distance(dirLoc.clone().add(ball.getVelocity())) / 2)));
+
+                 int ran = new Random().nextInt(2);
+                 int ran1 = new Random().nextInt(25);
+                 */
+
+
+                if (isRocket) {
+                    float dis = (float) dirLoc.distance(dirLoc.clone().add(dirLoc.getDirection()));
+
+                    for (float i = 0; i <= dis; i += 0.3) {
+                        Location particleLoc = dirLoc.clone().add(dirLoc.getDirection().multiply(i));
+                        //particleLoc.setYaw(new Random().nextInt(361));
+                        //particleLoc.setPitch(new Random().nextInt(181));
+
+                        BlockDisplay blockDisplay2 = particleLoc.getWorld().spawn(particleLoc, BlockDisplay.class);
+                        particles.add(blockDisplay2);
+                        blockDisplay2.setBlock(Material.OCHRE_FROGLIGHT.createBlockData());
+                        blockDisplay2.setInterpolationDelay(-1);
+                        int ranDura = 10 + new Random().nextInt(35);
+                        blockDisplay2.setInterpolationDuration(ranDura);
+
+                        blockDisplay2.setBrightness(new Display.Brightness(15, 15));
+
+                        int c = 1;
+                        for (Material colours : new Material[]{Material.YELLOW_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.RED_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS}) {
+                            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                if (colours == Material.LIGHT_GRAY_STAINED_GLASS) {
+                                    for (int b = 0; b <= 15; b++) {
+                                        int brightness = b;
+                                        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                            if (!blockDisplay2.isDead())
+                                                blockDisplay2.setBrightness(new Display.Brightness(brightness, brightness));
+                                        }, b);
+                                    }
+                                } else {
+                                    for (int b = 15; b >= 0; b--) {
+                                        int brightness = b;
+                                        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                            if (!blockDisplay2.isDead())
+                                                blockDisplay2.setBrightness(new Display.Brightness(brightness, brightness));
+                                        }, 15 - b);
+                                    }
+                                }
+                                blockDisplay2.setBlock(colours.createBlockData());
+                            }, c);
+                            c++;
+                        }
+
+                        float ranScale = 0.1F + (float) new Random().nextInt(10) / (float) 100;
+
+                        blockDisplay2.setTransformationMatrix(new Matrix4f()
+                                .scale(ranScale, ranScale, ranScale)
+                                .translate(-0.5F, -0.5F, -0.5F)
+                                .rotateLocalX((float) Math.toRadians(new Random().nextInt(91)))
+                                .rotateLocalY((float) Math.toRadians(new Random().nextInt(91)))
+                                .rotateLocalZ((float) Math.toRadians(new Random().nextInt(91))));
+
+                        int ran2 = new Random().nextInt(6);
+
+                        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                            float ranDir = ((float) new Random().nextInt(10)) / 10F;
+                            blockDisplay2.setTransformationMatrix(new Matrix4f()
+                                    .scale(0F, 0F, 0F)
+                                    .translateLocal(-ranDir / 2 + ranDir, -ranDir / 2 + ranDir, -ranDir / 2 + ranDir)
+                                    .rotateLocalX((float) Math.toRadians(new Random().nextInt(91)))
+                                    .rotateLocalY((float) Math.toRadians(new Random().nextInt(91)))
+                                    .rotateLocalZ((float) Math.toRadians(new Random().nextInt(91))));
+                            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                blockDisplay2.remove();
+                            }, ranDura / 4);
+                        }, 1);
+                    }
+
+                    //blockDisplay1.setInterpolationDelay(-1);
+                    //blockDisplay1.setInterpolationDuration(7 + ran1);
+
+                    //Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    //    blockDisplay1.setTransformationMatrix(new Matrix4f().scale(0f, 0F, ((float) dirLoc.distance(dirLoc.clone().add(ball.getVelocity())) / 2)).translate(-0.5F, -0.5F, -(float) (dirLoc.distance(dirLoc.clone().add(ball.getVelocity())) / 4)));
+                    //    Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    //        blockDisplay1.remove();
+                    //    }, 7 + ran1);
+                    //}, 1 + ran);
+
+                    if (ball.isDead()) {
+                        loc.getWorld().createExplosion(dirLoc, 2F);
+                        cancel();
+                        for (Entity entity : particles) {
+                            entity.remove();
+                        }
+                    }
+                }
+
+            }
+        }.runTaskTimer(ZUtils.plugin, 0L, 0L);
+
+    }
+
     public static boolean shootGunTest1(Player p, ItemStack item, boolean useBullet, boolean showMuzzle, boolean initialShot) {
 
         Item gun = Item.getItem(item);
@@ -141,13 +328,6 @@ public class Test implements TabExecutor {
 
         if (useBullet) {
             if (showMuzzle) {
-                if (ammo <= 0) { // Out of ammo cancel gunshot
-                    //p.sendMessage("OUT OF AMMO!");
-                    p.playSound(p, Sound.ITEM_BUNDLE_DROP_CONTENTS, 0.3F, 2);
-                    p.playSound(p, Sound.BLOCK_NOTE_BLOCK_SNARE, 0.2F, 0);
-                    p.playSound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 0.2F, 1.5F);
-                    return false;
-                }
                 //p.setCooldown(item, gun.getFireRate());
                 //p.sendMessage(gun.getRange() + "");
                 //p.sendMessage(gun.getBloom() + "");
@@ -155,19 +335,17 @@ public class Test implements TabExecutor {
                 //p.sendMessage(gun.getAmmo() + "");
                 //p.sendMessage(gun.getKey() + "");
             }
-            if (ammo >= 1) {
-                gun.setAmmo((gun.getAmmo() - 1 < 0) ? 0 : gun.getAmmo() - 1);
-                Guns.registeredGuns.remove(item);
-                //gun.setItemMetaData(UseType.GUN, item, item.getItemMeta().getDisplayName());
-                if (addCooldown) {
-                    //gun.setDurability(item);
-                    Guns.shootCooldown.add(item);
-                    Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                        Guns.shootCooldown.remove(item);
-                    }, gun.getFireRate());
-                }
-                Guns.registeredGuns.put(item, gun);
+            gun.setAmmo((gun.getAmmo() - 1 < 0) ? 0 : gun.getAmmo() - 1);
+            Guns.registeredGuns.remove(item);
+            //gun.setItemMetaData(UseType.GUN, item, item.getItemMeta().getDisplayName());
+            if (addCooldown) {
+                //gun.setDurability(item);
+                Guns.shootCooldown.add(item);
+                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    Guns.shootCooldown.remove(item);
+                }, gun.getFireRate());
             }
+            Guns.registeredGuns.put(item, gun);
         }
 
         //float rF = 0.9f + (1.15f - 0.9f) * new Random().nextFloat();
@@ -184,10 +362,10 @@ public class Test implements TabExecutor {
 
         boolean rightHand = p.getMainHand() == MainHand.RIGHT;
 
-        Location flashLoc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.212)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.465:-0.465)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
+        Location flashLoc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.212)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.465 : -0.465)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
 
-        Location loc = createWeaponLocation(p, rightHand, bloom);
-                Location loc1 = loc.clone();
+        Location loc = createWeaponLocation(p, bloom, false, 100);
+        Location loc1 = loc.clone();
 
         loc.getWorld().spawnParticle(Particle.SMOKE, loc.clone().add(p.getEyeLocation().getDirection().multiply(0.2)), 1, 0, 0, 0, 0.01);
 
@@ -236,16 +414,27 @@ public class Test implements TabExecutor {
         float distance = (variables.length > 0 ? (float) variables[0] : gun.getRange());
         Location hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
 
+        if (hitLocation.getBlock().getType() == Material.AIR)
+            hitLocation = null;
+
         BlockDisplay display = (BlockDisplay) p.getWorld().spawnEntity(loc, EntityType.BLOCK_DISPLAY);
         BlockDisplay display1 = (BlockDisplay) p.getWorld().spawnEntity(loc1, EntityType.BLOCK_DISPLAY);
 
-        display1.setBlock(Material.GOLD_BLOCK.createBlockData());
+        display1.setBlock(Material.OCHRE_FROGLIGHT.createBlockData());
         display.setViewRange(256);
         display1.setViewRange(256);
         display.setBillboard(Display.Billboard.FIXED);
         display1.setBillboard(Display.Billboard.FIXED);
-        display.setBrightness(new Display.Brightness(15, 15));
+        display.setBrightness(new Display.Brightness(0, 0));
         display1.setBrightness(new Display.Brightness(15, 15));
+
+        for (int b = 0; b <= 15; b++) {
+            int brightness = b;
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                if (!display.isDead())
+                    display.setBrightness(new Display.Brightness(brightness, brightness));
+            }, b);
+        }
 
         //display.setTransformationMatrix(new Matrix4f().scale(0.1F, 0.1F, 0.1F).translate(-.5F, -.5F, 0).translate(0, 0, 0.1F));
 
@@ -371,7 +560,7 @@ public class Test implements TabExecutor {
             holeDisplayPuff.setBrightness(new Display.Brightness(0, 0));
 
             int randomPuffRotation = new Random().nextInt(91);
-            float randomSize = new Random().nextFloat(11)/100; //0.25
+            float randomSize = new Random().nextFloat(11) / 100; //0.25
             holedisplay.setTransformationMatrix(new Matrix4f().scale(0.16F + randomSize, 0.16F + randomSize, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(randomPuffRotation)));
             holeDisplayPuff.setTransformationMatrix(new Matrix4f().scale(0).transpose().translate(-0.5F, -0.5F, 0));
             holedisplay1.setTransformationMatrix(new Matrix4f().scale(0.04F + randomSize, 0.04F + randomSize, 0.01F).transpose().translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(randomPuffRotation + new Random().nextInt(26))));
@@ -444,7 +633,7 @@ public class Test implements TabExecutor {
 
     }
 
-    public static Location createWeaponLocation(Player p, boolean rightHand, float bloom) {
+    public static Location createWeaponLocation(Player p, float bloom, boolean isFlash, float searchDistance) {
         Location gunLoc = p.getEyeLocation().clone();
 
         gunLoc.setPitch(0);
@@ -455,14 +644,21 @@ public class Test implements TabExecutor {
         gunLoc1.setPitch(90 - p.getEyeLocation().getPitch());
         gunLoc1.setYaw(gunLoc1.getYaw() + 180);
 
-        Location loc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.6:-0.6)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
+        boolean rightHand = p.getMainHand() == MainHand.RIGHT;
+
+        Location loc;
+
+        loc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.6 : -0.6)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
+
+        if (isFlash)
+            loc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.212)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.465 : -0.465)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
 
         Location hitLocation = null;
 
-        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p, 100);
+        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p, searchDistance);
         hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
-        if (hitLocation != null) {
+        if (hitLocation != null) { // run check
             Vector newVec = hitLocation.clone().toVector().subtract(loc.clone().toVector());
             loc.setDirection(newVec);
         }
@@ -526,6 +722,8 @@ public class Test implements TabExecutor {
         Location eyeLocation = loc;
         Vector direction = eyeLocation.getDirection();
 
+        DecimalFormat df = new DecimalFormat("0.00");
+
         // Step 2: Set maximum distance for the raytrace (you can adjust this as needed)
         float maxDistance = range; // Maximum distance you want to trace
 
@@ -543,7 +741,7 @@ public class Test implements TabExecutor {
             }
 
             // Step 5: Check if the block is solid (not air)
-            if (currentLocation.getBlock().getType() != Material.AIR && currentLocation.getBlock().getType() != Material.LIGHT) {
+            if ((currentLocation.getBlock().getType() != Material.AIR && currentLocation.getBlock().getType() != Material.LIGHT) || Double.valueOf(df.format(distance)) == maxDistance - 0.01) {
                 // Add the exact distance and location to the HashMap
                 return new Object[]{distance, currentLocation};
             }
