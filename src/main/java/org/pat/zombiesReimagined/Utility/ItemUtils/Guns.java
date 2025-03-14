@@ -28,7 +28,7 @@ public class Guns {
             new Item(UseType.GUN, "Shotgun", Material.IRON_AXE, "shotgun", false, 10, 18, 6, 50, 11, 5, 1),
             new Item(UseType.GUN, "Deagle", Material.IRON_HOE, "deagle", false, 100, 0, 12, 100, 7, 20, 0),
             new Item(UseType.GUN, "Double Shotgun", Material.DIAMOND_AXE, "double_shotgun", false, 100, 0, 30, 1, 10, 10, 0),
-            new Item(UseType.GUN, "Grenade Launcher", Material.NETHERITE_SHOVEL, "grenade_launcher", false, 100, 4, 30, 450, 0, 1, 0),
+            new Item(UseType.GUN, "Grenade Launcher", Material.NETHERITE_SHOVEL, "grenade_launcher", false, 10, 4, 30, 450, 0, 1, 0),
             new Item(UseType.GUN, "LMG", Material.IRON_PICKAXE, "lmg", false, 100, 0, 30, 1, 10, 10, 0),
             new Item(UseType.GUN, "MK-47", Material.NETHERITE_PICKAXE, "mk47", false, 100, 0, 30, 1, 10, 10, 0),
             new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, 100, 0, 30, 1, 10, 10, 0),
@@ -159,7 +159,7 @@ public class Guns {
                     Test.shootGunTest1(p, item, true, true, true);
                     break;
                 case "grenade_launcher":
-                    Test.shootExplosive1(p, item, false);
+                    Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT);
                     break;
                 case "lmg":
                     Test.shootGunTest1(p, item, true, true, true);
@@ -174,7 +174,7 @@ public class Guns {
                     Test.shootGunTest1(p, item, true, true, true);
                     break;
                 case "rpg":
-                    Test.shootExplosive(p, item, true);
+                    Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null);
                     break;
                 case "smg":
                     Test.shootGunTest1(p, item, true, true, true);

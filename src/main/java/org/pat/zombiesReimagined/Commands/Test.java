@@ -116,14 +116,131 @@ public class Test implements TabExecutor {
         }
     }
 
-    public static void shootGunTest2(Player p) {
+    public static Location getBlockFaceDirection(Location hitLocation) {
+        double distanceNorth = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, 0, -0.5)); // North face
+        double distanceSouth = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, 0, 0.5)); // South face
+        double distanceWest = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(-0.5, 0, 0)); // West face
+        double distanceEast = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0.5, 0, 0)); // East face
+        double distanceUp = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, 0.5, 0)); // Up face
+        double distanceDown = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, -0.5, 0)); // Down face
 
-        float randomIncrease = 0.5f + (0.75f - 0.5f) * new Random().nextFloat();
-        Location bulletLoc = p.getEyeLocation().clone().add(p.getEyeLocation().getDirection().multiply(randomIncrease));
+        // Find the face with the smallest distance
+        double minDistance = Math.min(Math.min(Math.min(distanceNorth, distanceSouth), Math.min(distanceWest, distanceEast)), Math.min(distanceUp, distanceDown));
 
+        Location faceLocation = null;
+        float pitch = 0;
+        float yaw = 0;
+
+        // Return the corresponding face based on the smallest distance
+        if (minDistance == distanceNorth) {
+            faceLocation = hitLocation.clone().add(0, 0, -0.5);
+            yaw = -180;
+            pitch = 0;
+        } else if (minDistance == distanceSouth) {
+            faceLocation = hitLocation.clone().add(0, 0, 0.5);
+            yaw = 0;
+            pitch = 0;
+        } else if (minDistance == distanceWest) {
+            faceLocation = hitLocation.clone().add(-0.5, 0, 0);
+            yaw = 90;
+            pitch = 0;
+        } else if (minDistance == distanceEast) {
+            faceLocation = hitLocation.clone().add(0.5, 0, 0);
+            yaw = -90;
+            pitch = 0;
+        } else if (minDistance == distanceUp) {
+            faceLocation = hitLocation.clone().add(0, 0.5, 0);
+            yaw = 0;
+            pitch = -90;
+        } else {
+            faceLocation = hitLocation.clone().add(0, -0.5, 0);
+            yaw = 0;
+            pitch = 90;
+        }
+        Vector holeVec = hitLocation.clone().getBlock().getLocation().add(0.5, 0.5, 0.5).toVector().subtract(faceLocation.toVector()).normalize().multiply(-1);
+
+        holeVec = holeVec.multiply(0.01);
+
+        Location holeLocation = hitLocation.clone().add(holeVec);
+        holeLocation.setPitch(pitch);
+        holeLocation.setYaw(yaw);
+
+        return holeLocation;
     }
 
-    public static void shootExplosive1(Player p, ItemStack item, boolean isRocket) {
+    public static void runColourArray(BlockDisplay blockDisplay1) {
+        blockDisplay1.setBrightness(new Display.Brightness(15, 15));
+        blockDisplay1.setBlock(Material.OCHRE_FROGLIGHT.createBlockData());
+        int c = 1;
+        for (Material colours : new Material[]{Material.YELLOW_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.RED_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS}) {
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                /**
+                 if (colours == Material.LIGHT_GRAY_STAINED_GLASS) {
+                 for (int b = 5; b <= 15; b++) {
+                 int brightness = b;
+                 Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                 if (!blockDisplay1.isDead())
+                 blockDisplay1.setBrightness(new Display.Brightness(brightness, brightness));
+                 }, b);
+                 }
+                 } else {
+                 for (int b = 15; b >= 5; b--) {
+                 int brightness = b;
+                 Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                 if (!blockDisplay1.isDead())
+                 blockDisplay1.setBrightness(new Display.Brightness(brightness, brightness));
+                 }, 15 - b);
+                 }
+                 }
+                 */
+                blockDisplay1.setBlock(colours.createBlockData());
+            }, c);
+            c++;
+        }
+    }
+
+    public static boolean createTrail(Location adjustedLoc, Vector dir, boolean hasColour, Material customTrail) {
+        if (adjustedLoc.getBlock().getType() != Material.AIR)
+            return false;
+
+        BlockDisplay blockDisplay1 = adjustedLoc.getWorld().spawn(adjustedLoc, BlockDisplay.class);
+        blockDisplay1.setTransformationMatrix(new Matrix4f()
+                .scale(0.1f + (new Random().nextInt(15) / 100), 0.1F + (new Random().nextInt(15) / 100), (float) dir.length())
+                .translate(-0.5F, -0.5F, 0)
+        );
+
+        int ran = new Random().nextInt(2);
+        int ran1 = new Random().nextInt(15);
+
+        if (hasColour) {
+            runColourArray(blockDisplay1);
+        } else {
+            blockDisplay1.setBrightness(new Display.Brightness(15, 15));
+            if (customTrail == null) {
+                blockDisplay1.setBlock(Material.LIGHT_GRAY_STAINED_GLASS.createBlockData());
+            } else {
+                blockDisplay1.setBlock(customTrail.createBlockData());
+            }
+        }
+
+        blockDisplay1.setInterpolationDelay(-1);
+        blockDisplay1.setInterpolationDuration(7 + ran1);
+
+        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+            blockDisplay1.setTransformationMatrix(new Matrix4f()
+                    .scale(0f, 0F, ((float) dir.length() / 2))
+                    .translate(-0.5F, -0.5F, 0)
+                    .rotateLocalZ((float) Math.toRadians(new Random().nextInt(91)))
+            );
+            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                blockDisplay1.remove();
+            }, 2 + ran1); //2
+        }, 1 + ran);
+
+        return true;
+    }
+
+    public static void shootExplosive1(Player p, ItemStack item, boolean hasGravity, boolean hasTrail, boolean hasSmoke, boolean hasColour, boolean hasPropulsion, boolean canBounce, boolean pitchCheck, Material customTrail) {
         Item gun = Item.getItem(item);
         float bloom = gun.getBloom();
 
@@ -149,116 +266,95 @@ public class Test implements TabExecutor {
 
         Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
 
-        // GRENADE METHOD AKA REWRITE FOR BELOW METHOD USING NO SNOWBALLS
-        // GRENADE TO BOUNCE OFF BLOCKS
-        // EXPLODE ON ENTITY SETTING
-        // PASS-THRU ENTITY SETTING
-        // BOUNCE OFF ENTITY SETTING
-        // USE RANGE TO DETERMINE WHEN TO EXPLODE
-        // USE FIRST BLOCK DISPLAY TRAIL METHOD FROM BELOW METHOD (TO BEING WITH)
-        // CREATE METHOD FOR EXPLOSION PARTICLES AKA QUICK PARTICLES WITH TRAIL DISPLAY AND A GLOWING BALL
-        // ABOVE COMMENT TO BE CONSIDERED FOR BULLET RICOCHETS
-
-    }
-
-    public static void shootExplosive(Player p, ItemStack item, boolean isRocket) {
-
-        Item gun = Item.getItem(item);
-        float bloom = gun.getBloom();
-
-        boolean addCooldown = false;
-
-        if (Guns.shootCooldown.contains(item)) {
-            return;
-        } else {
-            addCooldown = true;
+        if (pitchCheck) {
+            if (p.getPitch() >= 80 || p.getPitch() <= -80)
+                loc.setDirection(p.getEyeLocation().getDirection());
         }
 
-        gun.setAmmo((gun.getAmmo() - 1 < 0) ? 0 : gun.getAmmo() - 1);
-        Guns.registeredGuns.remove(item);
-        //gun.setItemMetaData(UseType.GUN, item, item.getItemMeta().getDisplayName());
-        if (addCooldown) {
-            //gun.setDurability(item);
-            Guns.shootCooldown.add(item);
-            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                Guns.shootCooldown.remove(item);
-            }, gun.getFireRate());
-        }
-        Guns.registeredGuns.put(item, gun);
+        Location adjustedLoc = loc.clone();
+        adjustedLoc.setDirection(adjustedLoc.getDirection().normalize().add(p.getVelocity()).multiply(3));
 
-        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
+        Vector dir = adjustedLoc.getDirection();
 
-        Snowball ball = loc.getWorld().spawn(loc, Snowball.class);
-        ball.setVelocity(loc.getDirection().normalize().multiply(1.2));
+        float grav = -0.08f;
+        if (!hasGravity)
+            grav = 0;
 
-        if (isRocket)
-            ball.setGravity(false);
+        float dep = 0.99F;
+        if (!hasPropulsion)
+            dep = 1;
 
-        ball.setInvulnerable(true);
-
-        List<Entity> particles = new ArrayList<>();
+        float depletionRate = dep;
+        float gravity = grav;
 
         new BukkitRunnable() {
+            int i = 0;
+
             public void run() {
 
-                if (loc.distance(ball.getLocation()) >= gun.getRange())
-                    ball.remove();
+                Object[] variables1 = getLookingAtBlockSpot(adjustedLoc, p, (float) dir.length(), 0.001F);
+                float distance = (float) variables1[0];
+                Location hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
-                Location dirLoc = ball.getLocation();
-                dirLoc.setDirection(ball.getVelocity());
-                dirLoc.add(0, 0.15, 0);
+                if (hitLocation != null && hitLocation.getBlock().getType() != Material.AIR || variables1.length == 3) {
 
-                /**
-                 BlockDisplay blockDisplay1 = loc.getWorld().spawn(dirLoc, BlockDisplay.class);
-                 blockDisplay1.setBlock(Material.LIGHT_GRAY_STAINED_GLASS.createBlockData());
-                 blockDisplay1.setTransformationMatrix(new Matrix4f().scale(0.25f + (new Random().nextInt(15) / 100), 0.25F + (new Random().nextInt(15) / 100), (float) dirLoc.distance(dirLoc.clone().add(ball.getVelocity()))).translate(-0.5F, -0.5F, -(float) (dirLoc.distance(dirLoc.clone().add(ball.getVelocity())) / 2)));
+                    double dirStr = dir.length();
 
-                 int ran = new Random().nextInt(2);
-                 int ran1 = new Random().nextInt(25);
-                 */
+                    dir.normalize();
 
+                    Vector blockNormalVec = getBlockFaceDirection(hitLocation).getDirection();
 
-                if (isRocket) {
-                    float dis = (float) dirLoc.distance(dirLoc.clone().add(dirLoc.getDirection()));
+                    if (canBounce) {
+                        if (variables1.length == 3) {
+                            Location tL = ((Entity) variables1[2]).getLocation();
+                            tL.setY(hitLocation.getY());
+                            blockNormalVec = hitLocation.toVector().subtract(tL.toVector());
+                        }
+                        blockNormalVec.normalize();
 
-                    for (float i = 0; i <= dis; i += 0.3) {
-                        Location particleLoc = dirLoc.clone().add(dirLoc.getDirection().multiply(i));
+                        double dotProduct = dir.dot(blockNormalVec);
+
+                        Vector reflected = dir.subtract(blockNormalVec.clone().multiply(2 * dotProduct));
+
+                        reflected.setX(reflected.getX() / 2);
+                        reflected.setZ(reflected.getZ() / 2);
+
+                        adjustedLoc.setDirection(reflected.multiply(dirStr).multiply(depletionRate));
+                        adjustedLoc.set(hitLocation.getX(), hitLocation.getY(), hitLocation.getZ());
+                        adjustedLoc.add(blockNormalVec.multiply(0.01));
+
+                        dir.setY(dir.getY() + gravity);
+                        dir.multiply(depletionRate);
+                    } else {
+                        createExplosion(adjustedLoc, blockNormalVec, 100, 15);
+                        cancel();
+                    }
+
+                } else {
+                    if (i != 0) {
+                        dir.setY(dir.getY() + gravity);
+                        dir.multiply(depletionRate);
+                        adjustedLoc.setDirection(dir);
+                        adjustedLoc.add(dir);
+                    }
+                }
+
+                if (hasTrail) {
+                    createTrail(adjustedLoc, dir, hasColour, customTrail);
+                }
+
+                if (hasSmoke) {
+                    for (float i = 0; i <= dir.length(); i += 0.3) {
+                        Location particleLoc = adjustedLoc.clone().add(adjustedLoc.getDirection().multiply(i));
                         //particleLoc.setYaw(new Random().nextInt(361));
                         //particleLoc.setPitch(new Random().nextInt(181));
 
                         BlockDisplay blockDisplay2 = particleLoc.getWorld().spawn(particleLoc, BlockDisplay.class);
-                        particles.add(blockDisplay2);
-                        blockDisplay2.setBlock(Material.OCHRE_FROGLIGHT.createBlockData());
                         blockDisplay2.setInterpolationDelay(-1);
-                        int ranDura = 10 + new Random().nextInt(35);
+                        int ranDura = 10 + new Random().nextInt(45);
                         blockDisplay2.setInterpolationDuration(ranDura);
 
                         blockDisplay2.setBrightness(new Display.Brightness(15, 15));
-
-                        int c = 1;
-                        for (Material colours : new Material[]{Material.YELLOW_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.RED_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS}) {
-                            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                                if (colours == Material.LIGHT_GRAY_STAINED_GLASS) {
-                                    for (int b = 0; b <= 15; b++) {
-                                        int brightness = b;
-                                        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                                            if (!blockDisplay2.isDead())
-                                                blockDisplay2.setBrightness(new Display.Brightness(brightness, brightness));
-                                        }, b);
-                                    }
-                                } else {
-                                    for (int b = 15; b >= 0; b--) {
-                                        int brightness = b;
-                                        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                                            if (!blockDisplay2.isDead())
-                                                blockDisplay2.setBrightness(new Display.Brightness(brightness, brightness));
-                                        }, 15 - b);
-                                    }
-                                }
-                                blockDisplay2.setBlock(colours.createBlockData());
-                            }, c);
-                            c++;
-                        }
 
                         float ranScale = 0.1F + (float) new Random().nextInt(10) / (float) 100;
 
@@ -274,38 +370,114 @@ public class Test implements TabExecutor {
                         Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
                             float ranDir = ((float) new Random().nextInt(10)) / 10F;
                             blockDisplay2.setTransformationMatrix(new Matrix4f()
-                                    .scale(0F, 0F, 0F)
+                                    .scaleLocal(0F, 0F, 0F)
                                     .translateLocal(-ranDir / 2 + ranDir, -ranDir / 2 + ranDir, -ranDir / 2 + ranDir)
                                     .rotateLocalX((float) Math.toRadians(new Random().nextInt(91)))
                                     .rotateLocalY((float) Math.toRadians(new Random().nextInt(91)))
                                     .rotateLocalZ((float) Math.toRadians(new Random().nextInt(91))));
                             Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
                                 blockDisplay2.remove();
-                            }, ranDura / 4);
+                            }, ranDura);
                         }, 1);
-                    }
 
-                    //blockDisplay1.setInterpolationDelay(-1);
-                    //blockDisplay1.setInterpolationDuration(7 + ran1);
-
-                    //Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                    //    blockDisplay1.setTransformationMatrix(new Matrix4f().scale(0f, 0F, ((float) dirLoc.distance(dirLoc.clone().add(ball.getVelocity())) / 2)).translate(-0.5F, -0.5F, -(float) (dirLoc.distance(dirLoc.clone().add(ball.getVelocity())) / 4)));
-                    //    Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                    //        blockDisplay1.remove();
-                    //    }, 7 + ran1);
-                    //}, 1 + ran);
-
-                    if (ball.isDead()) {
-                        loc.getWorld().createExplosion(dirLoc, 2F);
-                        cancel();
-                        for (Entity entity : particles) {
-                            entity.remove();
+                        if (hasColour) {
+                            runColourArray(blockDisplay2);
+                        } else {
+                            blockDisplay2.setBrightness(new Display.Brightness(15, 15));
+                            blockDisplay2.setBlock(Material.LIGHT_GRAY_STAINED_GLASS.createBlockData());
                         }
+
                     }
+                }
+
+                i++;
+
+                if (i == 50 || dir.length() <= 0.01 || adjustedLoc.getBlock().getType() != Material.AIR) {
+                    if (adjustedLoc.getBlock().getType() != Material.AIR) {
+                        adjustedLoc.add(0, 0.1, 0);
+                        dir.setY(1);
+                        adjustedLoc.setDirection(dir);
+                    }
+                    createExplosion(adjustedLoc, adjustedLoc.getDirection(), hasPropulsion ? 140:360, 25);
+                    cancel();
                 }
 
             }
         }.runTaskTimer(ZUtils.plugin, 0L, 0L);
+
+        // EXPLODE ON ENTITY SETTING
+        // PASS-THRU ENTITY SETTING
+        // BOUNCE OFF ENTITY SETTING
+        // USE RANGE TO DETERMINE WHEN TO EXPLODE
+        // CREATE METHOD FOR EXPLOSION PARTICLES AKA QUICK PARTICLES WITH TRAIL DISPLAY AND A GLOWING BALL
+        // ABOVE COMMENT TO BE CONSIDERED FOR BULLET RICOCHETS
+
+    }
+
+    public static void createExplosion(Location location, Vector dirVec, float bloom, int particleAmount) {
+
+        if (location.clone().add(0, -0.1, 0).getBlock().getType() != Material.AIR)
+            dirVec.multiply(1);
+
+        for (int i = 0; i <= particleAmount; i++) {
+            Location loc = location.clone();
+            loc.setDirection(dirVec);
+
+            Random rand = new Random();
+
+            //float radius = bloom * (rand.nextFloat() * 0.5f + 0.5f);
+            float radius = bloom * (float) Math.pow(rand.nextFloat(), 0.75f);
+
+            float theta = rand.nextFloat() * 2 * (float) Math.PI;
+            float phi = (float) Math.acos(2 * rand.nextFloat() - 1);
+
+            float offsetX = radius * (float) Math.sin(phi) * (float) Math.cos(theta); // X offset for yaw
+            float offsetY = radius * (float) Math.sin(phi) * (float) Math.sin(theta); // Y offset for yaw
+            float offsetZ = radius * (float) Math.cos(phi); // Z offset for pitch
+
+            Location placeholderLoc = loc.clone();
+
+            placeholderLoc.setPitch(0);
+            placeholderLoc.setYaw(placeholderLoc.getYaw() + 90);
+
+            Location placeholderLoc1 = loc.clone();
+
+            placeholderLoc1.setPitch(90 - loc.getPitch());
+            placeholderLoc1.setYaw(placeholderLoc1.getYaw() + 180);
+
+            Location placeholderLoc2 = loc.clone();
+
+            placeholderLoc2.setPitch(180 - loc.getPitch());
+            placeholderLoc2.setYaw(placeholderLoc1.getYaw() + 360);
+
+            Location offsetLoc = loc.clone().add(loc.getDirection().multiply(100)).add(placeholderLoc1.getDirection().multiply(offsetY)).add(placeholderLoc.getDirection().multiply(offsetZ)).add(placeholderLoc2.getDirection().multiply(offsetX)); //.add(gunLoc1.getDirection()
+
+            Vector offsetVec = offsetLoc.toVector().subtract(loc.toVector());
+
+            loc.setDirection(offsetVec);
+
+            offsetVec.normalize();
+            offsetVec.multiply(2);
+
+            new BukkitRunnable() {
+                Location loca = loc.clone();
+                Vector vector = offsetVec.clone();
+                int length = 0;
+
+                public void run() {
+                    boolean tC = createTrail(loca, offsetVec, true, null);
+
+                    vector.multiply(0.96);
+                    vector.setY(vector.getY() - 0.08);
+                    loca.add(vector);
+                    loca.setDirection(vector);
+
+                    length++;
+                    if (length == 5 || !tC)
+                        cancel();
+                }
+            }.runTaskTimer(ZUtils.plugin, 0L, 0L);
+        }
 
     }
 
@@ -410,11 +582,11 @@ public class Test implements TabExecutor {
             }
         }
 
-        Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange());
+        Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0);
         float distance = (variables.length > 0 ? (float) variables[0] : gun.getRange());
         Location hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
 
-        if (hitLocation.getBlock().getType() == Material.AIR)
+        if (hitLocation.getBlock().getType() == Material.AIR && variables.length < 3)
             hitLocation = null;
 
         BlockDisplay display = (BlockDisplay) p.getWorld().spawnEntity(loc, EntityType.BLOCK_DISPLAY);
@@ -655,7 +827,7 @@ public class Test implements TabExecutor {
 
         Location hitLocation = null;
 
-        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p, searchDistance);
+        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p, searchDistance, 0);
         hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
         if (hitLocation != null) { // run check
@@ -717,7 +889,7 @@ public class Test implements TabExecutor {
         return targetLocation.distance(faceLocation);
     }
 
-    public static Object[] getLookingAtBlockSpot(Location loc, Player p, float range) {
+    public static Object[] getLookingAtBlockSpot(Location loc, Player p, float range, float iterationAmount) {
         // Step 1: Get player's eye location and the direction they are looking
         Location eyeLocation = loc;
         Vector direction = eyeLocation.getDirection();
@@ -727,12 +899,15 @@ public class Test implements TabExecutor {
         // Step 2: Set maximum distance for the raytrace (you can adjust this as needed)
         float maxDistance = range; // Maximum distance you want to trace
 
+        if (iterationAmount == 0)
+            iterationAmount = 0.01F;
+
         // Step 4: Trace the line of sight and find the first non-air block with 0.01 increments
-        for (float distance = 0.01F; distance <= maxDistance; distance += 0.01) {
+        for (float distance = iterationAmount; distance <= maxDistance; distance += iterationAmount) {
             // Calculate the current location the player is looking at with the smaller increment
             Location currentLocation = eyeLocation.clone().add(direction.clone().multiply(distance));
 
-            for (LivingEntity entity : currentLocation.getNearbyLivingEntities(0.5, 0.5, 0.5)) {
+            for (LivingEntity entity : currentLocation.getNearbyLivingEntities(0.1, 0.1, 0.1)) {
                 if (entity.getBoundingBox().contains(currentLocation.toVector())) {
                     if (entity != p && entity.getHealth() > 0) {
                         return new Object[]{distance, currentLocation, entity};

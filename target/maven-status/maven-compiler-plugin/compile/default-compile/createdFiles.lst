@@ -17,6 +17,7 @@ org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\SpawnStructure$2.class
 org\pat\zombiesReimagined\Commands\ZombiesItems.class
 org\pat\zombiesReimagined\Utility\MapUtils\IdentifiedStructures.class
 org\pat\zombiesReimagined\Zombies.class
+org\pat\zombiesReimagined\Commands\Test$2.class
 org\pat\zombiesReimagined\Commands\Test.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure$2.class
 org\pat\zombiesReimagined\Utility\ItemUtils\UseType.class
