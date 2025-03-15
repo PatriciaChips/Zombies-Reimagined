@@ -159,7 +159,7 @@ public class Guns {
                     Test.shootGunTest1(p, item, true, true, true);
                     break;
                 case "grenade_launcher":
-                    Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT);
+                    Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT, 4, 12);
                     break;
                 case "lmg":
                     Test.shootGunTest1(p, item, true, true, true);
@@ -174,7 +174,7 @@ public class Guns {
                     Test.shootGunTest1(p, item, true, true, true);
                     break;
                 case "rpg":
-                    Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null);
+                    Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null, 3, 10);
                     break;
                 case "smg":
                     Test.shootGunTest1(p, item, true, true, true);

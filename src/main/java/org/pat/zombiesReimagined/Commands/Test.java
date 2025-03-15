@@ -5,6 +5,7 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.HangingSign;
 import org.bukkit.block.data.type.Light;
 import org.bukkit.command.Command;
@@ -16,6 +17,7 @@ import org.bukkit.entity.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MainHand;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
@@ -26,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.pattyEssentialsV3.Utils;
 import org.pat.zombiesReimagined.Listeners.Interact;
@@ -199,13 +202,13 @@ public class Test implements TabExecutor {
         }
     }
 
-    public static boolean createTrail(Location adjustedLoc, Vector dir, boolean hasColour, Material customTrail) {
+    public static boolean createTrail(Location adjustedLoc, boolean hasColour, Material customTrail) {
         if (adjustedLoc.getBlock().getType() != Material.AIR)
             return false;
 
         BlockDisplay blockDisplay1 = adjustedLoc.getWorld().spawn(adjustedLoc, BlockDisplay.class);
         blockDisplay1.setTransformationMatrix(new Matrix4f()
-                .scale(0.1f + (new Random().nextInt(15) / 100), 0.1F + (new Random().nextInt(15) / 100), (float) dir.length())
+                .scale(0.1f + (new Random().nextInt(15) / 100), 0.1F + (new Random().nextInt(15) / 100), (float) adjustedLoc.getDirection().length())
                 .translate(-0.5F, -0.5F, 0)
         );
 
@@ -228,7 +231,7 @@ public class Test implements TabExecutor {
 
         Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
             blockDisplay1.setTransformationMatrix(new Matrix4f()
-                    .scale(0f, 0F, ((float) dir.length() / 2))
+                    .scale(0f, 0F, ((float) adjustedLoc.getDirection().length() / 2))
                     .translate(-0.5F, -0.5F, 0)
                     .rotateLocalZ((float) Math.toRadians(new Random().nextInt(91)))
             );
@@ -240,7 +243,27 @@ public class Test implements TabExecutor {
         return true;
     }
 
-    public static void shootExplosive1(Player p, ItemStack item, boolean hasGravity, boolean hasTrail, boolean hasSmoke, boolean hasColour, boolean hasPropulsion, boolean canBounce, boolean pitchCheck, Material customTrail) {
+    public static BlockFace getBlockFaceFromNormal(Vector normalVec) {
+        // Get the absolute values of the vector components
+        double absX = Math.abs(normalVec.getX());
+        double absY = Math.abs(normalVec.getY());
+        double absZ = Math.abs(normalVec.getZ());
+
+        // Check which component has the largest absolute value
+        if (absX > absY && absX > absZ) {
+            // If the X component is the largest, it's either EAST or WEST
+            return (normalVec.getX() > 0) ? BlockFace.EAST : BlockFace.WEST;
+        } else if (absY > absX && absY > absZ) {
+            // If the Y component is the largest, it's either UP or DOWN
+            return (normalVec.getY() > 0) ? BlockFace.UP : BlockFace.DOWN;
+        } else {
+            // If the Z component is the largest, it's either NORTH or SOUTH
+            return (normalVec.getZ() > 0) ? BlockFace.SOUTH : BlockFace.NORTH;
+        }
+    }
+
+    public static void shootExplosive1(Player p, ItemStack item, boolean hasGravity, boolean hasTrail, boolean hasSmoke, boolean hasColour,
+                                       boolean hasPropulsion, boolean canBounce, boolean pitchCheck, Material customTrail, float dmgRadius, float dmg) {
         Item gun = Item.getItem(item);
         float bloom = gun.getBloom();
 
@@ -272,7 +295,7 @@ public class Test implements TabExecutor {
         }
 
         Location adjustedLoc = loc.clone();
-        adjustedLoc.setDirection(adjustedLoc.getDirection().normalize().add(p.getVelocity()).multiply(3));
+        adjustedLoc.setDirection(adjustedLoc.getDirection().normalize().multiply(3));
 
         Vector dir = adjustedLoc.getDirection();
 
@@ -289,10 +312,11 @@ public class Test implements TabExecutor {
 
         new BukkitRunnable() {
             int i = 0;
+            Location prevLoc = null;
 
             public void run() {
 
-                Object[] variables1 = getLookingAtBlockSpot(adjustedLoc, p, (float) dir.length(), 0.001F);
+                Object[] variables1 = getLookingAtBlockSpot(adjustedLoc.clone(), p, (float) dir.length(), 0.001F);
                 float distance = (float) variables1[0];
                 Location hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
@@ -304,7 +328,10 @@ public class Test implements TabExecutor {
 
                     Vector blockNormalVec = getBlockFaceDirection(hitLocation).getDirection();
 
-                    if (canBounce) {
+                    hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_SHIELD_BLOCK, 0.2F, 1.4F);
+                    hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_SHIELD_BLOCK, 0.1F, 1.8F);
+
+                    if (canBounce && variables1.length != 3) {
                         if (variables1.length == 3) {
                             Location tL = ((Entity) variables1[2]).getLocation();
                             tL.setY(hitLocation.getY());
@@ -325,8 +352,10 @@ public class Test implements TabExecutor {
 
                         dir.setY(dir.getY() + gravity);
                         dir.multiply(depletionRate);
+
                     } else {
-                        createExplosion(adjustedLoc, blockNormalVec, 100, 15);
+                        boolean showPloom = !(variables1.length == 3);
+                        createExplosion(adjustedLoc.clone(), blockNormalVec, 150, 20, showPloom, dmgRadius, dmg); //(getBlockFaceFromNormal(blockNormalVec) == BlockFace.DOWN || getBlockFaceFromNormal(blockNormalVec) == BlockFace.UP) ? true:false
                         cancel();
                     }
 
@@ -335,17 +364,26 @@ public class Test implements TabExecutor {
                         dir.setY(dir.getY() + gravity);
                         dir.multiply(depletionRate);
                         adjustedLoc.setDirection(dir);
-                        adjustedLoc.add(dir);
+                        adjustedLoc.add(adjustedLoc.getDirection());
                     }
                 }
 
                 if (hasTrail) {
-                    createTrail(adjustedLoc, dir, hasColour, customTrail);
+                    if (prevLoc != null) {
+                        Vector vector = adjustedLoc.toVector().subtract(prevLoc.toVector());
+                        vector.normalize();
+                        vector.multiply(adjustedLoc.getDirection().length());
+                        prevLoc.setDirection(vector);
+                        createTrail(prevLoc.clone(), hasColour, customTrail);
+                    } else {
+                        createTrail(adjustedLoc.clone(), hasColour, customTrail);
+                    }
+                    prevLoc = adjustedLoc.clone();
                 }
 
                 if (hasSmoke) {
                     for (float i = 0; i <= dir.length(); i += 0.3) {
-                        Location particleLoc = adjustedLoc.clone().add(adjustedLoc.getDirection().multiply(i));
+                        Location particleLoc = adjustedLoc.clone().add(adjustedLoc.clone().getDirection().multiply(i));
                         //particleLoc.setYaw(new Random().nextInt(361));
                         //particleLoc.setPitch(new Random().nextInt(181));
 
@@ -393,12 +431,17 @@ public class Test implements TabExecutor {
                 i++;
 
                 if (i == 50 || dir.length() <= 0.01 || adjustedLoc.getBlock().getType() != Material.AIR) {
+                    boolean showPloom = false;
                     if (adjustedLoc.getBlock().getType() != Material.AIR) {
-                        adjustedLoc.add(0, 0.1, 0);
+                        adjustedLoc.setY(adjustedLoc.getBlock().getRelative(BlockFace.UP).getLocation().getY());
                         dir.setY(1);
+                        dir.setX(0);
+                        dir.setZ(0);
                         adjustedLoc.setDirection(dir);
+                        showPloom = true;
+                        dir.normalize();
                     }
-                    createExplosion(adjustedLoc, adjustedLoc.getDirection(), hasPropulsion ? 140:360, 25);
+                    createExplosion(adjustedLoc.clone(), adjustedLoc.getDirection(), hasPropulsion ? 140 : 500, 25, showPloom, dmgRadius, dmg);
                     cancel();
                 }
 
@@ -414,10 +457,63 @@ public class Test implements TabExecutor {
 
     }
 
-    public static void createExplosion(Location location, Vector dirVec, float bloom, int particleAmount) {
+    public static void createExplosion(Location location, Vector dirVec, float bloom, int particleAmount, boolean showPloom, float dmgRadius, float dmg) {
 
-        if (location.clone().add(0, -0.1, 0).getBlock().getType() != Material.AIR)
+        if (location.clone().add(0, -0.1, 0).getBlock().getType() != Material.AIR) {
             dirVec.multiply(1);
+        }
+
+        location.getWorld().playSound(location, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 0.3F, 0);
+        location.getWorld().playSound(location, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 0.7F, 0.5F);
+
+        for (LivingEntity entity : location.getNearbyLivingEntities(dmgRadius)) {
+            if (!(entity instanceof Player)) {
+                Vector explosionVel = entity.getLocation().toVector().setY(location.getY()).subtract(location.toVector());
+                explosionVel.add(new Vector(0, 1.5, 0));
+                explosionVel.normalize();
+                explosionVel.multiply(0.8F);
+                entity.setVelocity(explosionVel);
+                entity.getWorld().spawnParticle(Particle.BLOCK, entity.getLocation().add(0, 1, 0), 10, 0.3, 1, 0.3, Material.REDSTONE_BLOCK.createBlockData());
+                new BukkitRunnable() {
+                    int iteration = 0;
+
+                    public void run() {
+
+                        if (!entity.isDead())
+                            entity.getWorld().spawnParticle(Particle.BLOCK, entity.getLocation().add(0, 1, 0), 2, 0.1, 0.1, 0.1, Material.REDSTONE_BLOCK.createBlockData());
+
+                        if (iteration == 5 || entity.isDead())
+                            cancel();
+
+                        iteration++;
+                    }
+                }.runTaskTimer(ZUtils.plugin, 0L, 0L);
+                entity.damage(0);
+                entity.setHealth(entity.getHealth() - dmg >= 0 ? entity.getHealth() - dmg : 0);
+            }
+        }
+
+        if (showPloom) {
+            int ranRot = new Random().nextInt(91);
+            Location ploomLoc = location.clone();
+            ploomLoc.setDirection(dirVec);
+            for (int rot : new int[]{0, 45}) {
+                BlockDisplay blockDisplay = location.getWorld().spawn(ploomLoc, BlockDisplay.class);
+                blockDisplay.setBrightness(new Display.Brightness(7, 7));
+                blockDisplay.setBlock(Material.WHITE_STAINED_GLASS.createBlockData());
+                blockDisplay.setTransformationMatrix(new Matrix4f().scale(1.5F, 1.5F, 0.1F).translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(ranRot + rot)));
+                blockDisplay.setInterpolationDelay(-1);
+                blockDisplay.setInterpolationDuration(3);
+                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                    blockDisplay.setBlock(Material.LIGHT_GRAY_STAINED_GLASS.createBlockData());
+                    blockDisplay.setTransformationMatrix(new Matrix4f().scale(6, 6, 0.01F).translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(ranRot + rot)));
+                    Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                        blockDisplay.remove();
+                    }, blockDisplay.getInterpolationDuration());
+                }, 1);
+                ploomLoc.add(0, 0.001, 0);
+            }
+        }
 
         for (int i = 0; i <= particleAmount; i++) {
             Location loc = location.clone();
@@ -457,7 +553,7 @@ public class Test implements TabExecutor {
             loc.setDirection(offsetVec);
 
             offsetVec.normalize();
-            offsetVec.multiply(2);
+            offsetVec.multiply(1);
 
             new BukkitRunnable() {
                 Location loca = loc.clone();
@@ -465,7 +561,7 @@ public class Test implements TabExecutor {
                 int length = 0;
 
                 public void run() {
-                    boolean tC = createTrail(loca, offsetVec, true, null);
+                    boolean tC = createTrail(loca, true, null);
 
                     vector.multiply(0.96);
                     vector.setY(vector.getY() - 0.08);
@@ -891,8 +987,8 @@ public class Test implements TabExecutor {
 
     public static Object[] getLookingAtBlockSpot(Location loc, Player p, float range, float iterationAmount) {
         // Step 1: Get player's eye location and the direction they are looking
-        Location eyeLocation = loc;
-        Vector direction = eyeLocation.getDirection();
+        Location eyeLocation = loc.clone();
+        Vector direction = eyeLocation.getDirection().clone();
 
         DecimalFormat df = new DecimalFormat("0.00");
 
