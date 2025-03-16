@@ -1,5 +1,6 @@
 package org.pat.zombiesReimagined.Utility.ItemUtils;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -24,22 +25,23 @@ public class Guns {
     public static HashMap<ItemStack, Player> reloadCooldown = new HashMap<>();
 
     public static Item[] gunArray = new Item[]{
-            new Item(UseType.GUN, "Minigun", Material.NETHERITE_HOE, "minigun", false, 50, 4, 250, 250, 4, 25, 0),
-            new Item(UseType.GUN, "Shotgun", Material.IRON_AXE, "shotgun", false, 10, 18, 6, 50, 11, 5, 1),
-            new Item(UseType.GUN, "Deagle", Material.IRON_HOE, "deagle", false, 100, 0, 12, 100, 7, 20, 0),
-            new Item(UseType.GUN, "Double Shotgun", Material.DIAMOND_AXE, "double_shotgun", false, 100, 0, 30, 1, 10, 10, 0),
-            new Item(UseType.GUN, "Grenade Launcher", Material.NETHERITE_SHOVEL, "grenade_launcher", false, 10, 4, 30, 450, 0, 1, 0),
-            new Item(UseType.GUN, "LMG", Material.IRON_PICKAXE, "lmg", false, 100, 0, 30, 1, 10, 10, 0),
-            new Item(UseType.GUN, "MK-47", Material.NETHERITE_PICKAXE, "mk47", false, 100, 0, 30, 1, 10, 10, 0),
-            new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, 100, 0, 30, 1, 10, 10, 0),
-            new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, 20, 0, 1, 20, 0, 20, 0),
-            new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, 100, 0, 30, 1, 10, 10, 0),
-            new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, 100, 0, 30, 1, 10, 10, 0)
+            new Item(UseType.GUN, "Minigun", Material.NETHERITE_HOE, "minigun", false, false, 50, 4, 250, 250, 4, 25, 0),
+            new Item(UseType.GUN, "Shotgun", Material.IRON_AXE, "shotgun", false, false, 10, 18, 6, 50, 11, 5, 1),
+            new Item(UseType.GUN, "Deagle", Material.IRON_HOE, "deagle", false, false, 100, 0, 12, 100, 7, 20, 0),
+            new Item(UseType.GUN, "Double Shotgun", Material.DIAMOND_AXE, "double_shotgun", false, false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Grenade Launcher", Material.NETHERITE_SHOVEL, "grenade_launcher", false, false, 20, 4, 30, 450, 0, 1, 0),
+            new Item(UseType.GUN, "LMG", Material.IRON_PICKAXE, "lmg", false, false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "MK-47", Material.NETHERITE_PICKAXE, "mk47", false, false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, true, 30, 0, 1, 20, 0, 20, 0),
+            new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, false, 100, 0, 30, 1, 10, 10, 0),
+            new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, false, 100, 0, 30, 1, 10, 10, 0)
     };
 
     public static Item getGunFromKey(String key) {
         for (Item cItem : gunArray) {
             if (cItem.getItemStack().getItemMeta().getPersistentDataContainer().get(ZUtils.key, PersistentDataType.STRING).equalsIgnoreCase(key)) {
+                cItem.setUseModel(Test.useModels);
                 return cItem;
             }
         }
@@ -81,6 +83,11 @@ public class Guns {
                                 }
 
                                 p.setCooldown(item, cItem.getReloadSpeed());
+
+                                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                    cItem.swapModel(p, item);
+                                }, cItem.getReloadSpeed());
+
                                 int ammo = cItem.getAmmo();
                                 int preReloadAmount = cItem.getReloadAmount() > 0 ? cItem.getReloadAmount() : cItem.getMagSize() - ammo;
                                 if (preReloadAmount > cItem.getExtraAmmo())
@@ -89,7 +96,6 @@ public class Guns {
 
                                 new BukkitRunnable() {
                                     int i = 0;
-
                                     public void run() {
                                         double iterationAmount = (double) reloadAmount / (double) cItem.getReloadSpeed();
                                         if ((int) iterationAmount < 1) {
@@ -126,16 +132,22 @@ public class Guns {
                 return true;
             }
 
+            Location soundLoc = p.getEyeLocation().add(p.getEyeLocation().getDirection().normalize().multiply(0.3));
+
             switch (key) {
                 /** GUNS */
                 case "minigun": {
                     boolean isCooldowned = Test.shootGunTest1(p, item, true, true, true);
                     if (!isCooldowned) {
+                        playGenericGunSound(soundLoc);
                         Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                            playGenericGunSound(soundLoc);
                             Test.shootGunTest1(p, item, true, false, false);
                             Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                playGenericGunSound(soundLoc);
                                 Test.shootGunTest1(p, item, true, false, false);
                                 Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                    playGenericGunSound(soundLoc);
                                     Test.shootGunTest1(p, item, true, false, false);
                                 }, 1);
                             }, 1);
@@ -145,51 +157,110 @@ public class Guns {
                 }
                 case "shotgun": {
                     boolean isCooldowned = false;
-                    for (int i = 0; i <= 15; i++) {
+                    for (int i = 0; i <= 10; i++) {
                         if (i == 0)
                             isCooldowned = Test.shootGunTest1(p, item, true, true, true);
                         if (!isCooldowned)
+                            playGenericGunSound(soundLoc);
+                        if (!isCooldowned && i != 0)
                             Test.shootGunTest1(p, item, false, false, false);
                     }
                     break;
                 }
-                case "deagle":
-                    Test.shootGunTest1(p, item, true, true, true);
-                case "double_shotgun":
-                    Test.shootGunTest1(p, item, true, true, true);
+                case "deagle": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
+                }
+                case "double_shotgun": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
-                case "grenade_launcher":
-                    Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT, 4, 12);
+                }
+                case "grenade_launcher": {
+                    boolean playSound = !(Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT, 4, 12, true));
+                    if (playSound)
+                        playGenericExplosiveGunSound(soundLoc);
                     break;
-                case "lmg":
-                    Test.shootGunTest1(p, item, true, true, true);
+                }
+                case "lmg": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
-                case "mk47":
-                    Test.shootGunTest1(p, item, true, true, true);
+                }
+                case "mk47": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
-                case "pistol":
-                    Test.shootGunTest1(p, item, true, true, true);
+                }
+                case "pistol": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
-                case "revolver":
-                    Test.shootGunTest1(p, item, true, true, true);
+                }
+                case "revolver": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
-                case "rpg":
-                    Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null, 3, 10);
+                }
+                case "rpg": {
+                    boolean playSound = !(Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null, 3, 10, true));
+                    if (playSound)
+                        playGenericExplosiveGunSound(soundLoc);
                     break;
-                case "smg":
-                    Test.shootGunTest1(p, item, true, true, true);
+                }
+                case "smg": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
-                case "tommy_gun":
-                    Test.shootGunTest1(p, item, true, true, true);
+                }
+                case "tommy_gun": {
+                    boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
+                    if (playSound)
+                        playGenericGunSound(soundLoc);
                     break;
+                }
                 default:
                     return false; // Gun didnt fire
             }
+            if (cItem != null)
+                cItem.swapModel(p, item);
             return true; // Reached end of switch, Gun fired or reloaded
         }
 
         return false; // Gun didnt fire
 
+    }
+
+    public static void playGenericGunSound(Location loc) {
+        Object[] sounds = new Object[]{
+                new Object[]{Sound.BLOCK_BAMBOO_WOOD_PLACE, 0.5F, 1F},
+                new Object[]{Sound.BLOCK_STONE_PLACE, 0.5F, 2F}
+        };
+        for (Object var : sounds) {
+            Object[] sound = (Object[]) var;
+            loc.getWorld().playSound(loc, (Sound) sound[0], (float) sound[1], (float) sound[2]);
+        }
+    }
+
+    public static void playGenericExplosiveGunSound(Location loc) {
+        Object[] sounds = new Object[]{
+                new Object[]{Sound.ENTITY_LLAMA_SPIT, 0.1F, 0.5F},
+                new Object[]{Sound.ENTITY_LLAMA_SPIT, 0.1F, 1F},
+                new Object[]{Sound.ENTITY_LLAMA_EAT, 0.3F, 0.5F},
+                new Object[]{Sound.ENTITY_SHULKER_BULLET_HIT, 0.3F, 1.5F},
+                new Object[]{Sound.ENTITY_GENERIC_EXPLODE, 0.08F, 2F}
+        };
+        for (Object var : sounds) {
+            Object[] sound = (Object[]) var;
+            loc.getWorld().playSound(loc, (Sound) sound[0], (float) sound[1], (float) sound[2]);
+        }
     }
 
 }

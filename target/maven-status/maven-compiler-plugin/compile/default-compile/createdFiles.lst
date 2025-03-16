@@ -23,6 +23,7 @@ org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure$2.class
 org\pat\zombiesReimagined\Utility\ItemUtils\UseType.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Item.class
+org\pat\zombiesReimagined\Commands\Test$3.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Dev.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Guns$1$1.class
 org\pat\zombiesReimagined\Utility\MapUtils\FeatureType.class

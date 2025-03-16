@@ -2,10 +2,12 @@ package org.pat.zombiesReimagined.Utility.ItemUtils;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -27,6 +29,8 @@ public class Item implements Cloneable {
     private int reloadSpeed;
     private int reloadAmount;
     private boolean useModel;
+    private boolean hasMaglessModel;
+    private boolean usingMagModel;
     private String key;
 
     // Constructor for DEV item (only name, material, and amount)
@@ -37,7 +41,7 @@ public class Item implements Cloneable {
     }
 
     // Constructor for GUN item
-    public Item(UseType type, String name, Material material, String key, boolean useModel, float range, float bloom, int magSize, int extraAmmo, int fireRate, int reloadSpeed, int reloadAmount) {
+    public Item(UseType type, String name, Material material, String key, boolean useModel, boolean hasMaglessModel, float range, float bloom, int magSize, int extraAmmo, int fireRate, int reloadSpeed, int reloadAmount) {
         this.range = range;
         this.bloom = bloom;
         this.magSize = magSize;
@@ -47,6 +51,8 @@ public class Item implements Cloneable {
         this.reloadSpeed = reloadSpeed;
         this.reloadAmount = reloadAmount;
         this.useModel = useModel;
+        this.hasMaglessModel = hasMaglessModel;
+        this.usingMagModel = true;
         this.key = key;
         this.item = createItemStack(material, 1);
         //setDurability(item);
@@ -69,7 +75,9 @@ public class Item implements Cloneable {
         setItemMetaData(type, item, name); // GUN items use all properties
     }
 
-    /** GET */
+    /**
+     * GET
+     */
     public ItemStack getItemStack() {
         return item;
     }
@@ -110,7 +118,13 @@ public class Item implements Cloneable {
         return extraAmmo;
     }
 
-    /** SET */
+    public boolean hasMaglessModel() {
+        return hasMaglessModel;
+    }
+
+    /**
+     * SET
+     */
     public void setAmmo(int ammo) {
         this.ammo = ammo;
     }
@@ -126,7 +140,7 @@ public class Item implements Cloneable {
     public void setDurability(ItemStack item) {
         int dura = 0;
         if (ammo > 0 && ammo != magSize)
-            dura = ((item.getType().getMaxDurability()/(magSize)) * (magSize-ammo));
+            dura = ((item.getType().getMaxDurability() / (magSize)) * (magSize - ammo));
         if (ammo == magSize)
             dura = 1;
         if (ammo == 0)
@@ -136,7 +150,13 @@ public class Item implements Cloneable {
         Guns.registeredGuns.put(item, this);
     }
 
-    /** UTIL */
+    public void setUseModel(boolean useModel) {
+        this.useModel = useModel;
+    }
+
+    /**
+     * UTIL
+     */
     private ItemStack createItemStack(Material material, int amount) {
         return new ItemStack(material, amount);
     }
@@ -159,6 +179,38 @@ public class Item implements Cloneable {
             }
         }
         this.item = item;
+    }
+
+    public void swapModel(Player p, ItemStack item) {
+        if (hasMaglessModel) {
+            ItemMeta meta = item.getItemMeta(); // Get the current ItemMeta (used for properties like name, lore)
+            if (meta != null) {
+                if (useModel) {
+                    boolean changeMeta = false;
+                    if (usingMagModel) {
+                        if (ammo == 0) {
+                            meta.setItemModel(new NamespacedKey("guns", "_magless_" + key));
+                            changeMeta = true;
+                            usingMagModel = false;
+                        }
+                    } else {
+                        if (ammo > 0) {
+                            meta.setItemModel(new NamespacedKey("guns", key));
+                            changeMeta = true;
+                            usingMagModel = true;
+                        }
+                    }
+                    if (changeMeta) {
+                        Guns.registeredGuns.remove(item);
+                        Guns.shootCooldown.remove(item);
+                        item.setItemMeta(meta); // Apply changes
+                        this.item = item;
+                        Guns.registeredGuns.put(item, this);
+                        p.updateInventory();
+                    }
+                }
+            }
+        }
     }
 
     public static Item getItem(ItemStack item) {
