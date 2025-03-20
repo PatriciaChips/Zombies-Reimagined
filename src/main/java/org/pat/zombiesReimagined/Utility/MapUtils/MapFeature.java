@@ -1,9 +1,6 @@
 package org.pat.zombiesReimagined.Utility.MapUtils;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
@@ -40,6 +37,7 @@ public class MapFeature implements Cloneable {
     private List<Player> containedPlayers;
     private HashMap<Player, Long> containedTimedPlayers;
     private HashMap<Player, ItemStack> containedPlayersGun;
+    private Location loc;
 
     // Constructor for GUN shop
     public MapFeature(FeatureType gun, int gunCost, int ammoCost, String key) {
@@ -90,6 +88,8 @@ public class MapFeature implements Cloneable {
         this.name = "Lucky Chest";
         this.structureEntities = new ArrayList<>();
         this.containedTimedPlayers = new HashMap<>();
+        this.preHiddenEntities = new ArrayList<>();
+        this.toBEHiddenEntities = new ArrayList<>();
         this.extraBlocks = new ArrayList<>();
         this.packEnabledEntities = new ArrayList<>();
         this.containedPlayersGun = new HashMap<>();
@@ -98,6 +98,7 @@ public class MapFeature implements Cloneable {
     // Constructor for WINDOW
     public MapFeature(FeatureType window) {
         this.type = window;
+        this.structureEntities = new ArrayList<>();
     }
 
     // Constructor for UNLOCK_DOOR
@@ -196,6 +197,10 @@ public class MapFeature implements Cloneable {
         return containedPlayersGun.get(p);
     }
 
+    public Location getLoc() {
+        return loc;
+    }
+
     /**
      * SET METHODS
      */
@@ -204,15 +209,27 @@ public class MapFeature implements Cloneable {
     }
 
     public void setStructureEntities(List<Entity> structureEntities) {
-        this.structureEntities = structureEntities;
+        this.structureEntities.addAll(structureEntities);
+    }
+
+    public void setStructureEntities(Entity entity) {
+        this.structureEntities.add(entity);
     }
 
     public void setPreHiddenEntities(List<Entity> preHiddenEntities) {
-        this.preHiddenEntities = preHiddenEntities;
+        this.preHiddenEntities.addAll(preHiddenEntities);
+    }
+
+    public void setPreHiddenEntities(Entity entity) {
+        this.preHiddenEntities.add(entity);
     }
 
     public void setToBEHiddenEntities(List<Entity> toBEHiddenEntities) {
-        this.toBEHiddenEntities = toBEHiddenEntities;
+        this.toBEHiddenEntities.addAll(toBEHiddenEntities);
+    }
+
+    public void setToBEHiddenEntities(Entity entity) {
+        this.toBEHiddenEntities.add(entity);
     }
 
     public void setPackEnabledEntities(List<Entity> packEnabledEntities) {
@@ -247,6 +264,14 @@ public class MapFeature implements Cloneable {
     public void clearGunContainedPlayers() {
         if (containedPlayersGun != null)
             containedPlayersGun.clear();
+    }
+
+    public void setMaterial(Material material) {
+        this.material = material;
+    }
+
+    public void setLoc(Location loc) {
+        this.loc = loc;
     }
 
     /**
@@ -292,5 +317,43 @@ public class MapFeature implements Cloneable {
                 }
             }
         }
+    }
+
+    public boolean fillBlankWindowBlocks() {
+        boolean changedBlock = false;
+        if (type == FeatureType.WINDOW) {
+            for (Block block1 : extraBlocks) {
+                Material checkMat = block1.getLocation().getBlock().getType();
+                if (Tag.SLABS.isTagged(material))
+                    this.material = Material.OAK_SLAB;
+                if (checkMat != material) {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        player.sendBlockChange(block1.getLocation(), Material.BARRIER.createBlockData());
+                    }
+                    changedBlock = true;
+                }
+            }
+        }
+        return changedBlock;
+    }
+
+    public static boolean isMaterialSafe(Material mat) {
+        switch (mat) {
+            case AIR, REPEATER, COMPARATOR, TORCH, SOUL_TORCH, CHAIN, END_ROD, LIGHTNING_ROD, LADDER, FLOWER_POT,
+                 BREWING_STAND, LIGHT, MOSS_CARPET, PALE_MOSS_CARPET:
+                return true;
+        }
+
+        if (Tag.FLOWERS.isTagged(mat)
+                || Tag.SMALL_FLOWERS.isTagged(mat)
+                || Tag.REPLACEABLE.isTagged(mat)
+                || Tag.BUTTONS.isTagged(mat)
+                || Tag.ALL_SIGNS.isTagged(mat)
+                || Tag.SLABS.isTagged(mat)
+                || Tag.STAIRS.isTagged(mat)
+                || Tag.WOOL_CARPETS.isTagged(mat))
+            return true;
+
+        return false;
     }
 }

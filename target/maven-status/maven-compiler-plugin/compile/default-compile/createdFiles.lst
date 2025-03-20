@@ -4,9 +4,11 @@ org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure$3.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\SpawnStructure$1.class
 org\pat\zombiesReimagined\Commands\Test$1.class
 org\pat\zombiesReimagined\Listeners\SwapItem.class
+org\pat\zombiesReimagined\Utility\MapUtils\MapFeature$1.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\Selection.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure$1.class
 org\pat\zombiesReimagined\Listeners\Interact.class
+org\pat\zombiesReimagined\Utility\ItemUtils\Dev$1.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Guns$1.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Guns.class
 org\pat\zombiesReimagined\Utility\ZUtils.class
@@ -24,6 +26,7 @@ org\pat\zombiesReimagined\Utility\ItemUtils\UseType.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Item.class
 org\pat\zombiesReimagined\Commands\Test$3.class
+org\pat\zombiesReimagined\Listeners\Join$1.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Dev.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Guns$1$1.class
 org\pat\zombiesReimagined\Utility\MapUtils\FeatureType.class

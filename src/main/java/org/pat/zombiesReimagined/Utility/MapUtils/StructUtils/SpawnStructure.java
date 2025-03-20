@@ -1,12 +1,20 @@
 package org.pat.zombiesReimagined.Utility.MapUtils.StructUtils;
 
+import net.minecraft.util.Brightness;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.FaceAttachable;
+import org.bukkit.block.data.type.Lantern;
+import org.bukkit.block.data.type.Switch;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
@@ -15,9 +23,13 @@ import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.ZUtils;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SpawnStructure {
+
+    public static Display.Brightness textBrightness = new Display.Brightness(10, 10);
 
     public static void spawnStructures(PlayerInteractEvent e, Player p) {
         for (var featureMap : MapFeature.storedStructures.entrySet()) {
@@ -29,6 +41,7 @@ public class SpawnStructure {
                     loc.add(0, 3.3, 0);
 
                     TextDisplay nameText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(0.501)), TextDisplay.class);
+                    nameText.setBrightness(textBrightness);
                     nameText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameText.setShadowed(true);
                     nameText.setBillboard(Display.Billboard.FIXED);
@@ -37,6 +50,7 @@ public class SpawnStructure {
                     nameText.setTransformationMatrix(new Matrix4f().scaleLocal(2.5F, 2.5F, 2.5F));
 
                     TextDisplay nameText1 = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameText1.setBrightness(textBrightness);
                     nameText1.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameText1.setShadowed(true);
                     nameText1.setBillboard(Display.Billboard.FIXED);
@@ -48,6 +62,7 @@ public class SpawnStructure {
                     String underText = ColoredText.t("&7Click to purchase!");
 
                     TextDisplay nameUnderText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(0.501)), TextDisplay.class);
+                    nameUnderText.setBrightness(textBrightness);
                     nameUnderText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderText.setShadowed(true);
                     nameUnderText.setBillboard(Display.Billboard.FIXED);
@@ -56,6 +71,7 @@ public class SpawnStructure {
                     nameUnderText.setTransformationMatrix(new Matrix4f().scaleLocal(1F));
 
                     TextDisplay nameUnderText1 = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameUnderText1.setBrightness(textBrightness);
                     nameUnderText1.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderText1.setShadowed(true);
                     nameUnderText1.setBillboard(Display.Billboard.FIXED);
@@ -66,6 +82,7 @@ public class SpawnStructure {
                     loc.add(0, -0.5, 0);
 
                     TextDisplay costText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(0.501)), TextDisplay.class);
+                    costText.setBrightness(textBrightness);
                     costText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     costText.setShadowed(true);
                     costText.setBillboard(Display.Billboard.FIXED);
@@ -74,6 +91,7 @@ public class SpawnStructure {
                     costText.setTransformationMatrix(new Matrix4f().scaleLocal(1.3F).translate(-0.021F, 0, 0));
 
                     TextDisplay costText1 = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    costText1.setBrightness(textBrightness);
                     costText1.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     costText1.setShadowed(true);
                     costText1.setBillboard(Display.Billboard.FIXED);
@@ -89,6 +107,7 @@ public class SpawnStructure {
                     loc.add(0, 4, 0);
 
                     TextDisplay nameText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameText.setBrightness(textBrightness);
                     nameText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameText.setShadowed(true);
                     nameText.setBillboard(Display.Billboard.FIXED);
@@ -101,6 +120,7 @@ public class SpawnStructure {
                     String underText = ColoredText.t("&7Click to purchase!");
 
                     TextDisplay nameUnderText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameUnderText.setBrightness(textBrightness);
                     nameUnderText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderText.setShadowed(true);
                     nameUnderText.setBillboard(Display.Billboard.FIXED);
@@ -111,6 +131,7 @@ public class SpawnStructure {
                     underText = ColoredText.t("&7Click to buy ammo!");
 
                     TextDisplay nameUnderTextBrought = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameUnderTextBrought.setBrightness(textBrightness);
                     nameUnderTextBrought.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderTextBrought.setShadowed(true);
                     nameUnderTextBrought.setBillboard(Display.Billboard.FIXED);
@@ -147,6 +168,7 @@ public class SpawnStructure {
                     loc.add(0, -1.1, 0);
 
                     TextDisplay gunCostText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    gunCostText.setBrightness(textBrightness);
                     gunCostText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     gunCostText.setShadowed(true);
                     gunCostText.setBillboard(Display.Billboard.FIXED);
@@ -155,6 +177,7 @@ public class SpawnStructure {
                     gunCostText.setTransformationMatrix(new Matrix4f().scale(-1.3F, 1.3F, -1.3F).translate(-0.021F, 0, 0));
 
                     TextDisplay ammoCostText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    ammoCostText.setBrightness(textBrightness);
                     ammoCostText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     ammoCostText.setShadowed(true);
                     ammoCostText.setBillboard(Display.Billboard.FIXED);
@@ -175,6 +198,7 @@ public class SpawnStructure {
                     loc.add(0, 4, 0);
 
                     TextDisplay nameText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameText.setBrightness(textBrightness);
                     nameText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameText.setShadowed(true);
                     nameText.setBillboard(Display.Billboard.FIXED);
@@ -187,6 +211,7 @@ public class SpawnStructure {
                     String underText = ColoredText.t("&7Click to purchase!");
 
                     TextDisplay nameUnderText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameUnderText.setBrightness(textBrightness);
                     nameUnderText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderText.setShadowed(true);
                     nameUnderText.setBillboard(Display.Billboard.FIXED);
@@ -197,6 +222,7 @@ public class SpawnStructure {
                     underText = ColoredText.t("&7Already purchased!");
 
                     TextDisplay nameUnderTextBrought = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    nameUnderTextBrought.setBrightness(textBrightness);
                     nameUnderTextBrought.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderTextBrought.setShadowed(true);
                     nameUnderTextBrought.setBillboard(Display.Billboard.FIXED);
@@ -219,6 +245,7 @@ public class SpawnStructure {
                     loc.add(0, -1.1, 0);
 
                     TextDisplay costText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    costText.setBrightness(textBrightness);
                     costText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     costText.setShadowed(true);
                     costText.setBillboard(Display.Billboard.FIXED);
@@ -227,6 +254,7 @@ public class SpawnStructure {
                     costText.setTransformationMatrix(new Matrix4f().scale(-1.3F, 1.3F, -1.3F).translate(-0.021F, 0, 0));
 
                     TextDisplay purchasedText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
+                    purchasedText.setBrightness(textBrightness);
                     purchasedText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     purchasedText.setShadowed(true);
                     purchasedText.setBillboard(Display.Billboard.FIXED);
@@ -248,6 +276,7 @@ public class SpawnStructure {
                     float f = 0.9F;
 
                     TextDisplay nameText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(f)), TextDisplay.class);
+                    nameText.setBrightness(new Display.Brightness(15, 15));
                     nameText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameText.setShadowed(true);
                     nameText.setBillboard(Display.Billboard.FIXED);
@@ -283,6 +312,7 @@ public class SpawnStructure {
                     nameText.setTransformationMatrix(new Matrix4f().scaleLocal(-1.5F, 1.5F, -1.5F).rotateLocalX(100.4F).translate(0, 0.07F, 0));
 
                     TextDisplay nameUnderText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(f)), TextDisplay.class);
+                    nameUnderText.setBrightness(textBrightness);
                     nameUnderText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderText.setShadowed(true);
                     nameUnderText.setText(ColoredText.t("&7Click to roll for a gun!"));
@@ -291,6 +321,7 @@ public class SpawnStructure {
                     nameUnderText.setTransformationMatrix(new Matrix4f().scaleLocal(-0.8F, 0.8F, -0.8F).rotateLocalX(100.4F).translate(0, -0.14F, 0));
 
                     TextDisplay nameUnderTextRolling = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(f)), TextDisplay.class);
+                    nameUnderTextRolling.setBrightness(textBrightness);
                     nameUnderTextRolling.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderTextRolling.setShadowed(true);
                     nameUnderTextRolling.setText(ColoredText.t("&7 "));
@@ -339,6 +370,7 @@ public class SpawnStructure {
                     loc.add(0, -0.7, 0);
 
                     TextDisplay costText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(f + 0.1)), TextDisplay.class);
+                    costText.setBrightness(textBrightness);
                     costText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     costText.setShadowed(true);
                     costText.setText(ColoredText.t("&#29ab34$" + feature.getCost()));
@@ -354,6 +386,139 @@ public class SpawnStructure {
                     feature.statusVisibilitySwap(false);
 
                 }
+                break;
+                case WINDOW: {
+                    List<Entity> fogEntities = new ArrayList<>();
+                    BlockDisplay smogDisplay = loc.getWorld().spawn(loc.clone().add(loc.getDirection().normalize()), BlockDisplay.class);
+                    smogDisplay.setBlock(Material.GREEN_STAINED_GLASS.createBlockData());
+                    smogDisplay.setBrightness(new Display.Brightness(12, 12));
+                    smogDisplay.setTransformationMatrix(new Matrix4f()
+                            .scale(3.1F, 0.4F, 6.5F)
+                            .translate(-0.5F, 3.75F, -0.05F));
+                    fogEntities.add(smogDisplay);
+                    for (Block block : feature.getExtraBlocks()) {
+                        if (block.getType() == Material.BLACK_CONCRETE_POWDER) { // SPAWN LOCATION
+
+                        }
+                    }
+                    for (double i = 2; i <= 6; i += 0.7F) {
+                        BlockDisplay blockDisplay = loc.getWorld().spawn(loc.clone().add(loc.getDirection().normalize().multiply(i)), BlockDisplay.class);
+                        blockDisplay.setBlock(Material.BLACK_STAINED_GLASS.createBlockData());
+                        blockDisplay.setTransformationMatrix(new Matrix4f()
+                                .scale(3.1F, 3.5F, 0.1F)
+                                .translate(-0.5F, 0.25F, 0));
+                        fogEntities.add(blockDisplay);
+                    }
+                    feature.setStructureEntities(fogEntities);
+                }
+                break;
+                case POWERUP: {
+                    for (Block block : feature.getExtraBlocks()) {
+                        if (Tag.BUTTONS.isTagged(block.getType())) {
+                            Switch button = (Switch) block.getBlockData();
+                            Vector vec = blockFaceToVector(button.getFacing(), button.getAttachedFace());
+                            Location location = block.getLocation();
+                            location.setDirection(vec);
+                            vec.normalize().multiply(-0.55);
+
+                            BlockDisplay offButton = block.getWorld().spawn(location.clone().add(0.5, 0.5, 0.5).add(vec), BlockDisplay.class);
+                            offButton.setBrightness(new Display.Brightness(15, 15));
+                            offButton.setTransformationMatrix(new Matrix4f()
+                                    .scale(0.51F, 0.38F, 0.1F)
+                                    .translate(-0.5F, -0.5F, 0));
+                            offButton.setBlock(Material.RED_STAINED_GLASS.createBlockData());
+
+                            BlockDisplay onButton = block.getWorld().spawn(location.clone().add(0.5, 0.5, 0.5).add(vec), BlockDisplay.class);
+                            onButton.setBrightness(new Display.Brightness(15, 15));
+                            onButton.setTransformationMatrix(new Matrix4f()
+                                    .scale(0.51F, 0.38F, 0.1F)
+                                    .translate(-0.5F, -0.5F, 0));
+                            onButton.setBlock(Material.LIME_STAINED_GLASS.createBlockData());
+
+                            feature.setStructureEntities(List.of(new Entity[]{onButton, offButton}));
+                            feature.setPreHiddenEntities(onButton);
+                            feature.setToBEHiddenEntities(offButton);
+                        }
+                    }
+
+                    loc.add(0, 2.5, 0).add(loc.getDirection().normalize().multiply(-0.7));
+
+                    boolean isClear = MapFeature.isMaterialSafe(featureMap.getValue().clone().add(0, 1, 0).getBlock().getType());
+
+                    if (!isClear)
+                        loc.add(0, 0.5, 0);
+
+                    BlockDisplay nameBackboardStandChainleft = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
+                    nameBackboardStandChainleft.setBlock(Material.CHAIN.createBlockData());
+                    nameBackboardStandChainleft.setTransformationMatrix(new Matrix4f()
+                            .scale(0.8F)
+                            .translate((isClear) ? 0.1F: 0.05F, (isClear) ? -0.3F:-0.3F, (isClear) ? -0.25F:0.02F)
+                            .rotateLocalX((float) Math.toRadians((isClear) ? 18:45))
+                            .rotateLocalZ((float) Math.toRadians((isClear) ? -15L:13)));
+
+                    BlockDisplay nameBackboardStandChainright = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
+                    nameBackboardStandChainright.setBlock(Material.CHAIN.createBlockData());
+                    nameBackboardStandChainright.setTransformationMatrix(new Matrix4f()
+                            .scale(0.8F)
+                            .translate((isClear) ? -1.1F: -1.05F, (isClear) ? -0.3F:-0.3F, (isClear) ? -0.25F:0.02F)
+                            .rotateLocalX((float) Math.toRadians((isClear) ? 18:45))
+                            .rotateLocalZ((float) Math.toRadians((isClear) ? 15:-13)));
+
+                    BlockDisplay hangingSign = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
+                    hangingSign.setBlock(Material.STRIPPED_OAK_WOOD.createBlockData());
+                    hangingSign.setTransformationMatrix(new Matrix4f()
+                            .scale(1.15F, 0.45F, 0.13F)
+                            .translate(-0.5F, -1.7F, 0.7F)
+                            .rotateLocalX((float) Math.toRadians(4)));
+
+                    loc.setYaw(loc.getYaw() + 180);
+
+                    TextDisplay costText = loc.getWorld().spawn(loc.clone(), TextDisplay.class);
+                    costText.setBrightness(textBrightness);
+                    costText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+                    costText.setShadowed(true);
+                    costText.setText(ColoredText.t("&#29ab34$" + feature.getCost()));
+                    costText.setBillboard(Display.Billboard.FIXED);
+                    costText.setAlignment(TextDisplay.TextAlignment.CENTER);
+                    costText.setTransformationMatrix(new Matrix4f()
+                            .scale(1.5F)
+                            .translate(-0.021F, -0.44375F, -0.725F)
+                            .rotateLocalX((float) Math.toRadians(-4)));
+
+                    loc.add(0, (isClear) ? 2.4:1.4, 0);
+
+                    BlockDisplay lanternOn = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
+                    Lantern lanternOnData = (Lantern) Material.LANTERN.createBlockData();
+                    lanternOnData.setHanging(true);
+                    lanternOn.setBlock(lanternOnData);
+                    lanternOn.setBrightness(new Display.Brightness(15, 15));
+                    lanternOn.setTransformationMatrix(new Matrix4f()
+                            .scale(1)
+                            .translate(-0.5F, 0, -3.2F)
+                            .rotateLocalZ((float) Math.toRadians(180)));
+
+                    BlockDisplay lanternOff = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
+                    Lantern lanternOffData = (Lantern) Material.SOUL_LANTERN.createBlockData();
+                    lanternOffData.setHanging(true);
+                    lanternOff.setBlock(lanternOffData);
+                    lanternOff.setTransformationMatrix(new Matrix4f()
+                            .scale(1)
+                            .translate(-0.5F, 0, -3.2F)
+                            .rotateLocalZ((float) Math.toRadians(180)));
+
+                    BlockDisplay lanternGlass = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
+                    lanternGlass.setBlock(Material.GLASS.createBlockData());
+                    lanternGlass.setTransformationMatrix(new Matrix4f()
+                            .scale(0.5F, 0.6F, 0.5F)
+                            .translateLocal(-0.25f, -0.59f, -2.95F));
+
+                    feature.setStructureEntities(List.of(new Entity[]{costText, nameBackboardStandChainleft, nameBackboardStandChainright, hangingSign, lanternOn, lanternOff, lanternGlass}));
+                    feature.setPreHiddenEntities(List.of(new Entity[]{lanternOn}));
+                    feature.setToBEHiddenEntities(List.of(new Entity[]{lanternOn}));
+
+                    feature.statusVisibilitySwap(false);
+                }
+                break;
             }
         }
     }
@@ -369,6 +534,35 @@ public class SpawnStructure {
         if (p != null) {
             MapFeature.iteratedStructures.remove(p);
             p.sendMessage(ColoredText.t("&7&oCleared stored structures map.."));
+        }
+    }
+
+    public static Vector blockFaceToVector(BlockFace face) {
+        return blockFaceToVector(face, null);
+    }
+
+    public static Vector blockFaceToVector(BlockFace face, @Nullable FaceAttachable.AttachedFace attachedFace) {
+        if (attachedFace != null && attachedFace.equals(FaceAttachable.AttachedFace.CEILING))
+            face = BlockFace.DOWN;
+
+        if (attachedFace != null && attachedFace.equals(FaceAttachable.AttachedFace.FLOOR))
+            face = BlockFace.UP;
+
+        switch (face) {
+            case NORTH:
+                return new Vector(0, 0, -1);
+            case SOUTH:
+                return new Vector(0, 0, 1);
+            case EAST:
+                return new Vector(1, 0, 0);
+            case WEST:
+                return new Vector(-1, 0, 0);
+            case UP:
+                return new Vector(0, 1, 0);
+            case DOWN:
+                return new Vector(0, -1, 0);
+            default:
+                return new Vector(0, 0, 0); // Default case for unknown BlockFace
         }
     }
 

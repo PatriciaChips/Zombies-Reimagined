@@ -3,6 +3,7 @@ package org.pat.zombiesReimagined.Utility.ItemUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.entity.Bat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -33,7 +34,7 @@ public class Guns {
             new Item(UseType.GUN, "LMG", Material.IRON_PICKAXE, "lmg", false, true, 100, 0, 30, 100, 4, 10, 0),
             new Item(UseType.GUN, "MK-47", Material.NETHERITE_PICKAXE, "mk47", false, true, 100, 0, 30, 100, 4, 10, 0),
             new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, false, 100, 0, 30, 100, 4, 10, 0),
-            new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, true, 30, 0, 1, 15, 0, 20, 0),
+            new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, true, 30, 0, 1, 5, 0, 20, 0),
             new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, true, 100, 0, 30, 100, 4, 10, 0),
             new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, true, 100, 0, 30, 100, 4, 10, 0)
     };
@@ -94,8 +95,11 @@ public class Guns {
                                     preReloadAmount = cItem.getExtraAmmo();
                                 int reloadAmount = preReloadAmount;
 
+                                // SOUNDS
+
                                 new BukkitRunnable() {
                                     int i = 0;
+
                                     public void run() {
                                         double iterationAmount = (double) reloadAmount / (double) cItem.getReloadSpeed();
                                         if ((int) iterationAmount < 1) {
@@ -119,7 +123,7 @@ public class Guns {
                         }.runTaskTimer(ZUtils.plugin, 0L, cItem.getReloadSpeed() + iterationDelay);
                     } else {
                         p.sendMessage(ColoredText.t("&c&oOUT OF AMMO"));
-                        // ADD SOUNDS
+                        // SOUNDS
                     }
                 }
                 cItem.swapModel(p, item, true);
@@ -127,9 +131,8 @@ public class Guns {
             }
 
             if (cItem != null && cItem.getAmmo() == 0) {
-                p.playSound(p, Sound.ITEM_BUNDLE_DROP_CONTENTS, 0.3F, 2);
-                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_SNARE, 0.2F, 0);
-                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 0.2F, 1.5F);
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 0.4F, 0.6F);
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 0.3F, 0.9F);
                 return true;
             }
 

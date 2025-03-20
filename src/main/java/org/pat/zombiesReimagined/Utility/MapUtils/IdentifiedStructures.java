@@ -32,6 +32,7 @@ public class IdentifiedStructures {
 
         /** POWERUP */ //WOOL
         powerupIndentifiers.put(Material.LIGHT_GRAY_WOOL, new MapFeature(FeatureType.POWERUP, 250, "Fast Revive"));
+        powerupIndentifiers.put(Material.RED_WOOL, new MapFeature(FeatureType.POWERUP, 250, "Fire Bullets"));
 
         /** ARMOUR */ //GLASS
         armourIndentifiers.put(Material.GREEN_STAINED_GLASS, new MapFeature(FeatureType.ARMOR, 500, "Leather Armour", Material.LEATHER, true));

@@ -25,10 +25,13 @@ public class Join implements Listener {
     public void playerJoin(PlayerJoinEvent e) throws IOException {
 
         for (var v : MapFeature.storedStructures.entrySet()) {
-            if (v.getKey().getType() == FeatureType.GUN) {
-                v.getKey().statusVisibilitySwap(false);
-            } else if (v.getKey().getType() == FeatureType.CHEST) {
-                v.getKey().statusVisibilitySwap(true);
+            switch (v.getKey().getType()) {
+                case GUN, ARMOR, POWERUP:
+                    v.getKey().statusVisibilitySwap(false);
+                    continue;
+                case CHEST:
+                    v.getKey().statusVisibilitySwap(true);
+                    continue;
             }
         }
 

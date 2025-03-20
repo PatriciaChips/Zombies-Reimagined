@@ -1,10 +1,15 @@
 package org.pat.zombiesReimagined.Utility.MapUtils.StructUtils;
 
 import org.bukkit.*;
+import org.bukkit.Color;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
+import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Powerable;
+import org.bukkit.block.data.type.Stairs;
+import org.bukkit.block.data.type.Switch;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -23,7 +28,9 @@ import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.ZUtils;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class InteractStructure {
 
@@ -31,9 +38,9 @@ public class InteractStructure {
         for (var v : MapFeature.storedStructures.entrySet()) {
             MapFeature feature = v.getKey();
             Location loc = v.getValue();
-            switch (feature.getType()) {
-                case UNLOCK_DOOR:
-                    if (feature.getExtraBlocks().contains(block)) {
+            if (feature.getExtraBlocks() == null || feature.getExtraBlocks().contains(block)) {
+                switch (feature.getType()) {
+                    case UNLOCK_DOOR:
                         for (Block strucBlock : feature.getExtraBlocks()) {
                             if (block.getX() == strucBlock.getX() && block.getY() == strucBlock.getY() && block.getZ() == strucBlock.getZ()) {
                                 String sideName = "";
@@ -65,7 +72,7 @@ public class InteractStructure {
                                             BlockData data = structureBlocks.getBlockData();
                                             Material blockType = structureBlocks.getType();
                                             BlockDisplay blockDisplay = bLoc.getWorld().spawn(bLoc, BlockDisplay.class);
-                                            blockDisplay.setBrightness(new Display.Brightness(15, 15));
+                                            blockDisplay.setBrightness(new Display.Brightness(9, 9));
                                             blockDisplay.setInterpolationDuration(20);
                                             blockDisplay.setInterpolationDelay(2);
                                             blockDisplay.setBlock(data);
@@ -95,16 +102,14 @@ public class InteractStructure {
                                 break;
                             }
                         }
-                    }
-                    break;
-                case GUN:
-                    if (feature.getExtraBlocks().contains(block)) {
+                        break;
+                    case GUN:
                         e.setCancelled(true);
                         for (Block strucBlock : feature.getExtraBlocks()) {
                             if (block.equals(strucBlock)) {
                                 if (feature.containsPlayer(p)) {
                                     p.sendMessage("Ammo" + " | $" + feature.getCost1());
-                                    dispenseItems(p, loc, new ItemStack[]{new ItemStack(Material.PRISMARINE_CRYSTALS), new ItemStack(Material.PRISMARINE_CRYSTALS), new ItemStack(Material.PRISMARINE_CRYSTALS)});
+                                    dispenseItems(p, loc.clone().add(0, 1.5, 0), new ItemStack[]{new ItemStack(Material.PRISMARINE_CRYSTALS), new ItemStack(Material.PRISMARINE_CRYSTALS), new ItemStack(Material.PRISMARINE_CRYSTALS)});
                                 } else {
                                     p.sendMessage(feature.getName() + " | $" + feature.getCost());
                                     feature.addContainedPlayers(p);
@@ -113,14 +118,12 @@ public class InteractStructure {
                                     ItemStack gunItem = new Item(UseType.GUN, feature.getName(), feature.getMaterial(), feature.getKey(), Test.useModels).getItemStack();
                                     p.getEquipment().setItemInMainHand(gunItem);
 
-                                    dispenseItems(p, loc, new ItemStack[]{gunItem});
+                                    dispenseItems(p, loc.clone().add(0, 1.5, 0), new ItemStack[]{gunItem});
                                 }
                             }
                         }
-                    }
-                    break;
-                case ARMOR:
-                    if (feature.getExtraBlocks().contains(block)) {
+                        break;
+                    case ARMOR:
                         for (Block strucBlock : feature.getExtraBlocks()) {
                             if (block.equals(strucBlock)) {
                                 if (feature.containsPlayer(p)) {
@@ -147,15 +150,13 @@ public class InteractStructure {
                                         spitOutItems = new ItemStack[]{chestplate, helmet};
                                     }
 
-                                    dispenseItems(p, loc, spitOutItems);
+                                    dispenseItems(p, loc.clone().add(0, 1.5, 0), spitOutItems);
                                 }
                                 break;
                             }
                         }
-                    }
-                    break;
-                case CHEST:
-                    if (feature.getExtraBlocks().contains(block)) {
+                        break;
+                    case CHEST:
                         for (Block strucBlock : feature.getExtraBlocks()) {
                             if (block.equals(strucBlock)) {
                                 e.setCancelled(true);
@@ -281,8 +282,35 @@ public class InteractStructure {
                                 }, 200);
                             }
                         }
-                    }
-                    break;
+                        break;
+                    case POWERUP:
+                        if (!feature.containsPlayer(p)) {
+                            if (Tag.BUTTONS.isTagged(block.getType())) {
+                                Switch button = (Switch) block.getBlockData();
+                                Vector vec = SpawnStructure.blockFaceToVector(button.getFacing(), button.getAttachedFace());
+                                Test.createSpark(block.getLocation().add(0.5, 0.5, 0.5).add(vec.clone().multiply(-0.4)), vec, 100, 0.05F, 7, 2, 0.2F, 4, Material.PURPLE_STAINED_GLASS);
+                                boolean isClear = MapFeature.isMaterialSafe(loc.clone().add(0, 1, 0).getBlock().getType());
+                                Location lightSparkLoc = loc.clone().add(0, (isClear) ? 4.75:4, 0).add(loc.getDirection());
+                                Test.createSpark(lightSparkLoc, new Vector(0, 1, 0), 360, 0.05F, 14, 2, 0.35F, 3, Material.YELLOW_STAINED_GLASS);
+                                feature.addContainedPlayers(p);
+                                feature.statusVisibilitySwap(false);
+                                p.playSound(p, Sound.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, 0.5F, 1);
+                                e.setCancelled(true);
+                                for (Block block1 : feature.getExtraBlocks()) {
+                                    if (Tag.STAIRS.isTagged(block1.getType())) {
+                                        boolean isTop = ((Stairs) block1.getBlockData()).getHalf() == Bisected.Half.TOP;
+                                        Location dLoc = block1.getLocation().add(0.5, (isTop) ? 0:0.5F, 0.5);
+                                        dLoc.setDirection(loc.getDirection());
+                                        dispenseItems(p, dLoc, new ItemStack[]{new ItemStack(Material.valueOf(loc.clone().add(loc.getDirection()).getBlock().getType().toString().replace("WOOL", "DYE")))});
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            e.setCancelled(true);
+                        }
+                        break;
+                }
             }
         }
     }
@@ -290,7 +318,7 @@ public class InteractStructure {
     public static void dispenseItems(Player p, Location loc, ItemStack[] items) {
         ItemStack[] spitOutItems = items;
 
-        Location adLoc = loc.clone().add(0, 1.5, 0);
+        Location adLoc = loc.clone();
 
         if (items.length > 0) {
             p.getWorld().playSound(adLoc.clone(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.5F, 0.6F);

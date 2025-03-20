@@ -4,6 +4,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.HangingSign;
@@ -40,6 +41,7 @@ import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
 import org.pat.zombiesReimagined.Utility.ZUtils;
+import org.pat.zombiesReimagined.Zombies;
 import org.w3c.dom.Text;
 
 import java.text.DecimalFormat;
@@ -69,7 +71,37 @@ public class Test implements TabExecutor {
              }
              */
 
-            p.sendMessage(Guns.registeredGuns.size() + "");
+            /**
+            p.setInvulnerable(false);
+            p.setAllowFlight(false);
+            p.setGameMode(GameMode.SURVIVAL);
+            p.setLevel(0);
+            p.setFoodLevel(20);
+            p.setSaturation(6);
+            p.setHealth(20);
+            p.setArrowsInBody(0);
+            p.setCollidable(true);
+            p.setExpCooldown(0);
+             */
+
+            for (var mapFeature : MapFeature.storedStructures.entrySet()) {
+                MapFeature feature = mapFeature.getKey();
+                Location loc = mapFeature.getValue();
+                if (feature.getType() == FeatureType.WINDOW) {
+                    if (feature.getLoc() != null) {
+                        for (int i = 0; i <= 5; i++) {
+                            Zombie zombie = feature.getLoc().getWorld().spawn(feature.getLoc(), Zombie.class);
+                            zombie.setRemoveWhenFarAway(false);
+                            zombie.setPersistent(true);
+                            zombie.registerAttribute(Attribute.FOLLOW_RANGE);
+                            zombie.registerAttribute(Attribute.TEMPT_RANGE);
+                            zombie.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(1000);
+                            zombie.getAttribute(Attribute.TEMPT_RANGE).setBaseValue(1000);
+                            zombie.setTarget(p);
+                        }
+                    }
+                }
+            }
 
         }
 
@@ -203,7 +235,11 @@ public class Test implements TabExecutor {
     }
 
     public static boolean createTrail(Location adjustedLoc, boolean hasColour, Material customTrail, float scale, int duration, float length) {
-        if (adjustedLoc.getBlock().getType() != Material.AIR)
+        return createTrail(adjustedLoc, hasColour, customTrail, scale, duration, length, null);
+    }
+
+    public static boolean createTrail(Location adjustedLoc, boolean hasColour, Material customTrail, float scale, int duration, float length, @Nullable Player p) {
+        if (!MapFeature.isMaterialSafe(adjustedLoc.getBlock().getType()))
             return false;
 
         BlockDisplay blockDisplay1 = adjustedLoc.getWorld().spawn(adjustedLoc, BlockDisplay.class);
@@ -212,6 +248,13 @@ public class Test implements TabExecutor {
                 .scale(scale + ranScale, scale + ranScale, (float) length)
                 .translate(-0.5F, -0.5F, 0)
         );
+
+        if (p != null) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (player != p)
+                    player.hideEntity(ZUtils.plugin, blockDisplay1);
+            }
+        }
 
         int ran = new Random().nextInt(2);
         int ran1 = new Random().nextInt(duration * 2);
@@ -320,7 +363,7 @@ public class Test implements TabExecutor {
                 float distance = (float) variables1[0];
                 Location hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
-                if (hitLocation != null && hitLocation.getBlock().getType() != Material.AIR || variables1.length == 3) {
+                if (hitLocation != null && !MapFeature.isMaterialSafe(hitLocation.getBlock().getType()) || variables1.length == 3) {
 
                     double dirStr = dir.length();
 
@@ -363,7 +406,7 @@ public class Test implements TabExecutor {
                     if (i != 0) {
                         dir.setY(dir.getY() + gravity);
                         dir.multiply(depletionRate);
-                        if (adjustedLoc.clone().add(dir).getBlock().getType() == Material.AIR) {
+                        if (MapFeature.isMaterialSafe(adjustedLoc.clone().add(dir).getBlock().getType())) {
                             adjustedLoc.setDirection(dir);
                             adjustedLoc.add(dir);
                         } else {
@@ -440,9 +483,9 @@ public class Test implements TabExecutor {
 
                 i++;
 
-                if (i == gun.getRange() || dir.length() <= 0.01 || adjustedLoc.getBlock().getType() != Material.AIR) {
+                if (i == gun.getRange() || dir.length() <= 0.01 || !MapFeature.isMaterialSafe(adjustedLoc.getBlock().getType())) {
                     boolean showPloom = false;
-                    if (adjustedLoc.getBlock().getType() != Material.AIR) {
+                    if (!MapFeature.isMaterialSafe(adjustedLoc.getBlock().getType())) {
                         adjustedLoc.setY(adjustedLoc.getBlock().getRelative(BlockFace.UP).getLocation().getY());
                         dir.setY(1);
                         dir.setX(0);
@@ -465,6 +508,10 @@ public class Test implements TabExecutor {
     }
 
     public static void createSpark(Location location, Vector dir, float bloom, float scale, int amount, int duration, float length, int lengthAmount, Material trail) {
+        createSpark(location, dir, bloom, scale, amount, duration, length, lengthAmount, trail, null);
+    }
+
+    public static void createSpark(Location location, Vector dir, float bloom, float scale, int amount, int duration, float length, int lengthAmount, Material trail, @Nullable Player p) {
 
         for (int a = 1; a <= amount; a++) {
             Location loc = location.clone();
@@ -475,7 +522,7 @@ public class Test implements TabExecutor {
             for (int l = 1; l <= lengthAmount; l++) {
                 Location tLoc = loc.clone();
                 Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                    createTrail(tLoc, false, trail, scale, duration, (float) loc.getDirection().normalize().multiply(length).length());
+                    createTrail(tLoc, false, trail, scale, duration, (float) loc.getDirection().normalize().multiply(length).length(), p);
                 }, l);
                 Vector vec = loc.getDirection();
                 vec.setY(vec.getY() - 0.008);
@@ -489,7 +536,7 @@ public class Test implements TabExecutor {
 
     public static void createExplosion(Location location, Vector dirVec, float bloom, int particleAmount, boolean showPloom, float dmgRadius, float dmg) {
 
-        if (location.clone().add(0, -0.1, 0).getBlock().getType() != Material.AIR) {
+        if (!MapFeature.isMaterialSafe(location.clone().add(0, -0.1, 0).getBlock().getType())) {
             dirVec.multiply(1);
         }
 
@@ -718,7 +765,7 @@ public class Test implements TabExecutor {
         float distance = (variables.length > 0 ? (float) variables[0] : gun.getRange());
         Location hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
 
-        if (hitLocation.getBlock().getType() == Material.AIR && variables.length < 3)
+        if (MapFeature.isMaterialSafe(hitLocation.getBlock().getType()) && variables.length < 3)
             hitLocation = null;
 
         BlockDisplay display = (BlockDisplay) p.getWorld().spawnEntity(loc, EntityType.BLOCK_DISPLAY);
@@ -1050,7 +1097,7 @@ public class Test implements TabExecutor {
             }
 
             // Step 5: Check if the block is solid (not air)
-            if ((currentLocation.getBlock().getType() != Material.AIR && currentLocation.getBlock().getType() != Material.LIGHT) || Double.valueOf(df.format(distance)) == maxDistance - 0.01) {
+            if ((!MapFeature.isMaterialSafe(currentLocation.getBlock().getType())) || Double.valueOf(df.format(distance)) == maxDistance - 0.01) {
                 // Add the exact distance and location to the HashMap
                 return new Object[]{distance, currentLocation};
             }

@@ -1,15 +1,16 @@
 package org.pat.zombiesReimagined.Utility.ItemUtils;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Slab;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 import org.pat.pattyEssentialsV3.ColoredText;
@@ -20,10 +21,7 @@ import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.Selection;
 import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
 import org.pat.zombiesReimagined.Utility.ZUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Dev {
 
@@ -85,8 +83,98 @@ public class Dev {
                                                                 Location loc2 = centerLoc.clone().add(new Vector((!directionCheck) ? -2 : 0, 3, (!directionCheck) ? 0 : -2));
                                                                 mapFeature.setExtraBlocks(getBlocksInArea(loc1, loc2));
                                                                 MapFeature.storedStructures.put(mapFeature, centerLoc.add(0.5, -1, 0.5));
-                                                                break; //exit blockface check
+                                                                break; // exit blockface check
                                                             }
+                                                        }
+                                                    } else { /** WINDOW || POWERUP */
+                                                        Location centerLoc1 = loc.clone();
+                                                        Location upLoc = relativeLoc.clone().add(0, 1, 0);
+                                                        checkedBlocks.add(upLoc.getBlock());
+                                                        checkedBlocks.add(centerLoc1.getBlock());
+                                                        centerLoc1 = adjustLocationDirections(centerLoc1, loc.getBlock().getRelative(face).getRelative(face).getLocation());
+                                                        Location rightLoc = centerLoc1.clone();
+                                                        rightLoc.setYaw(rightLoc.getYaw() + 90);
+                                                        Location leftLoc = centerLoc1.clone();
+                                                        leftLoc.setYaw(leftLoc.getYaw() - 90);
+                                                        if (IdentifiedStructures.powerupIndentifiers.containsKey(upLoc.clone().add(0, -1, 0).getBlock().getType())) { /** POWERUP indentified */
+                                                            MapFeature mapFeature = IdentifiedStructures.powerupIndentifiers.get(upLoc.clone().add(0, -1, 0).getBlock().getType()).clone();
+                                                            mapFeature.setExtraBlocks(getBlocksInArea(centerLoc1.clone().add(0, 1, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getRelative(face).getLocation().add(0, 3, 0).add(leftLoc.getDirection().normalize())));
+                                                            //centerLoc1.clone().add(0, 1, 0).add(rightLoc.getDirection().normalize()).getBlock().setType(centerLoc1.getBlock().getRelative(face).getType());
+                                                            //centerLoc1.getBlock().getRelative(face).getRelative(face).getLocation().add(0, 3, 0).add(leftLoc.getDirection().normalize()).getBlock().setType(centerLoc1.getBlock().getRelative(face).getType());
+                                                            MapFeature.storedStructures.put(mapFeature, centerLoc1.clone().add(0.5, 0, 0.5));
+                                                            break; // exit blockface check
+                                                        } else { /** WINDOW*/
+                                                            MapFeature mapFeature = new MapFeature(FeatureType.WINDOW);
+                                                            for (Block block1 : getBlocksInArea(centerLoc1.clone().getBlock().getRelative(face).getLocation().add(0, 1, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getLocation().add(0, 1, 0).add(leftLoc.getDirection().normalize()))) {
+                                                                if (block1.getType() == Material.BLACK_CONCRETE_POWDER) {
+                                                                    mapFeature.setLoc(block1.getLocation().add(0.5, 1, 0.5)); // Mob spawn location
+                                                                    break;
+                                                                }
+                                                            }
+                                                            List<Block> barricadeBlocks = getBlocksInArea(centerLoc1.clone().getBlock().getRelative(face).getLocation().add(0, 2, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getLocation().add(0, 3, 0).add(leftLoc.getDirection().normalize()));
+                                                            mapFeature.setExtraBlocks(barricadeBlocks);
+                                                            mapFeature.setMaterial(barricadeBlocks.getFirst().getType());
+                                                            MapFeature.storedStructures.put(mapFeature, centerLoc1.clone().add(0.5, 0, 0.5));
+                                                            Location tLoc = centerLoc1.clone();
+                                                            Random random = new Random();
+                                                            new BukkitRunnable() {
+                                                                public void run() {
+                                                                    boolean underAttack = false;
+                                                                    for (Entity entity : getEntities(tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(leftLoc.getDirection()), tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
+                                                                        if (!(entity instanceof Player)) {
+                                                                            boolean containsType = false;
+                                                                            for (Block block2 : mapFeature.getExtraBlocks()) {
+                                                                                Block block1 = block2.getLocation().getBlock();
+                                                                                if (block1.getType() == mapFeature.getMaterial()) {
+                                                                                    containsType = true;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            if (containsType) {
+                                                                                Block randomBlock;
+                                                                                do {
+                                                                                    int randomIndex = random.nextInt(mapFeature.getExtraBlocks().size()); // Get a random index within the list size
+                                                                                    randomBlock = mapFeature.getExtraBlocks().get(randomIndex).getLocation().getBlock(); // Get the material at the random index
+                                                                                } while (!randomBlock.getType().equals(mapFeature.getMaterial()));
+                                                                                randomBlock.setType(Material.AIR);
+                                                                                block.getLocation().getWorld().playSound(block.getLocation().add(0.5, 0.5, 0.5), Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 0.5F, 1);
+                                                                            }
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    if (!underAttack) {
+                                                                        for (Entity entity : getEntities(tLoc.clone().add(leftLoc.getDirection()), tLoc.clone().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
+                                                                            if (entity instanceof Player p) {
+                                                                                if (p.isSneaking()) {
+                                                                                    boolean containsType = false;
+                                                                                    for (Block block2 : mapFeature.getExtraBlocks()) {
+                                                                                        Block block1 = block2.getLocation().getBlock();
+                                                                                        if (block1.getType() == Material.AIR) {
+                                                                                            containsType = true;
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                    if (containsType) {
+                                                                                        Block randomBlock;
+                                                                                        do {
+                                                                                            int randomIndex = random.nextInt(mapFeature.getExtraBlocks().size()); // Get a random index within the list size
+                                                                                            randomBlock = mapFeature.getExtraBlocks().get(randomIndex).getLocation().getBlock(); // Get the material at the random index
+                                                                                        } while (!randomBlock.getType().equals(Material.AIR));
+                                                                                        randomBlock.setType(mapFeature.getMaterial());
+                                                                                        Slab slab = (Slab) randomBlock.getBlockData();
+                                                                                        slab.setType(Slab.Type.TOP);
+                                                                                        randomBlock.setBlockData(slab);
+                                                                                        block.getLocation().getWorld().playSound(block.getLocation().add(0.5, 0.5, 0.5), Sound.BLOCK_STONE_PLACE, 0.5F, 0.8F);
+                                                                                    }
+                                                                                }
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    mapFeature.fillBlankWindowBlocks();
+                                                                }
+                                                            }.runTaskTimer(ZUtils.plugin, 0L, 25L);
+                                                            break; // exit blockface check
                                                         }
                                                     }
                                                 } else if (relativeLoc.clone().add(0, 2, 0).getBlock().getType() == Material.BEDROCK) { /** GUN || ARMOUR */
@@ -103,12 +191,12 @@ public class Dev {
                                                             MapFeature mapFeature = IdentifiedStructures.gunIdentifiers.get(centerLoc.clone().add(0, -1, 0).getBlock().getType()).clone();
                                                             mapFeature.setExtraBlocks(getBlocksInArea(loc1, loc2));
                                                             MapFeature.storedStructures.put(mapFeature, centerLoc.add(0.5, -1, 0.5));
-                                                            break; //exit blockface check
+                                                            break; // exit blockface check
                                                         } else if (IdentifiedStructures.armourIndentifiers.containsKey(centerLoc.clone().add(0, -1, 0).getBlock().getType())) { //ARMOUR indentified
                                                             MapFeature mapFeature = IdentifiedStructures.armourIndentifiers.get(centerLoc.clone().add(0, -1, 0).getBlock().getType()).clone();
                                                             mapFeature.setExtraBlocks(getBlocksInArea(loc1, loc2));
                                                             MapFeature.storedStructures.put(mapFeature, centerLoc.add(0.5, -1, 0.5));
-                                                            break; //exit blockface check
+                                                            break; // exit blockface check
                                                         }
                                                     }
                                                 } else if (relativeLoc.clone().getBlock().getType() == Material.BEDROCK) { /** LUCKY CHEST */
@@ -127,7 +215,6 @@ public class Dev {
                                                             break;
                                                         }
                                                     }
-                                                    break;
                                                 }
                                             }
                                         }
@@ -155,6 +242,38 @@ public class Dev {
 
         return true;
 
+    }
+
+    public static List<Entity> getEntities(Location loc, Location loc1) {
+        List<Entity> entitiesInRegion = new ArrayList<>();
+
+        loc = loc.clone();
+        loc1 = loc1.clone();
+
+        // Get the world from one of the locations (both should be in the same world)
+        World world = loc.getWorld();
+        if (world == null) {
+            return entitiesInRegion; // If the world is null, return an empty list
+        }
+
+        // Calculate the center point between the two locations
+        double centerX = (loc.getX() + loc1.getX()) / 2;
+        double centerY = (loc.getY() + loc1.getY()) / 2;
+        double centerZ = (loc.getZ() + loc1.getZ()) / 2;
+        Location centerLocation = new Location(world, centerX, centerY, centerZ);
+
+        // Calculate the radius (distance to a corner of the bounding box)
+        double radius = Math.max(
+                Math.max(Math.abs(loc.getX() - loc1.getX()), Math.abs(loc.getY() - loc1.getY())),
+                Math.abs(loc.getZ() - loc1.getZ())
+        );
+
+        // Get all nearby living entities within the calculated radius
+        for (Entity entity : centerLocation.getNearbyLivingEntities(radius, radius, radius)) {
+            entitiesInRegion.add(entity);
+        }
+
+        return entitiesInRegion;
     }
 
     public static Location adjustLocationDirections(Location centerLoc, Location directionLoc) {
