@@ -119,6 +119,10 @@ public class Dev {
                                                             Random random = new Random();
                                                             new BukkitRunnable() {
                                                                 public void run() {
+
+                                                                    if (!MapFeature.storedStructures.containsKey(mapFeature))
+                                                                        cancel();
+
                                                                     boolean underAttack = false;
                                                                     for (Entity entity : getEntities(tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(leftLoc.getDirection()), tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
                                                                         if (!(entity instanceof Player)) {

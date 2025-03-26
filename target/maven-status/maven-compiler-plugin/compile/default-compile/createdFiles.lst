@@ -12,11 +12,12 @@ org\pat\zombiesReimagined\Utility\ItemUtils\Dev$1.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Guns$1.class
 org\pat\zombiesReimagined\Utility\ItemUtils\Guns.class
 org\pat\zombiesReimagined\Utility\ZUtils.class
+org\pat\zombiesReimagined\Commands\Z.class
 org\pat\zombiesReimagined\Zombies$1.class
 org\pat\zombiesReimagined\Utility\MapUtils\MapFeature.class
 org\pat\zombiesReimagined\Listeners\Join.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\SpawnStructure$2.class
-org\pat\zombiesReimagined\Commands\ZombiesItems.class
+org\pat\zombiesReimagined\Commands\Z$1.class
 org\pat\zombiesReimagined\Utility\MapUtils\IdentifiedStructures.class
 org\pat\zombiesReimagined\Zombies.class
 org\pat\zombiesReimagined\Commands\Test$2.class

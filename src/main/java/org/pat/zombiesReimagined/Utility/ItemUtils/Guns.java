@@ -36,7 +36,8 @@ public class Guns {
             new Item(UseType.GUN, "Pistol", Material.WOODEN_HOE, "pistol", false, false, 100, 0, 30, 100, 4, 10, 0),
             new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, true, 30, 0, 1, 5, 0, 20, 0),
             new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, true, 100, 0, 30, 100, 4, 10, 0),
-            new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, true, 100, 0, 30, 100, 4, 10, 0)
+            new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, true, 100, 0, 30, 100, 4, 10, 0),
+            new Item(UseType.GUN, "Ray Gun", Material.GOLDEN_SHOVEL, "raygun", false, true, 40, 4, 30, 100, 4, 10, 0)
     };
 
     public static Item getGunFromKey(String key) {
@@ -125,8 +126,8 @@ public class Guns {
                         p.sendMessage(ColoredText.t("&c&oOUT OF AMMO"));
                         // SOUNDS
                     }
+                    cItem.swapModel(p, item, true);
                 }
-                cItem.swapModel(p, item, true);
                 return true;
             }
 
@@ -183,7 +184,7 @@ public class Guns {
                     break;
                 }
                 case "grenade_launcher": {
-                    boolean playSound = !(Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT, 4, 12, true));
+                    boolean playSound = !(Test.shootExplosive1(p, item, true, true, true, false, false, true, true, Material.OCHRE_FROGLIGHT, 4, 12, true, true, true));
                     if (playSound)
                         playGenericExplosiveGunSound(soundLoc);
                     break;
@@ -213,7 +214,7 @@ public class Guns {
                     break;
                 }
                 case "rpg": {
-                    boolean playSound = !(Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null, 3, 10, true));
+                    boolean playSound = !(Test.shootExplosive1(p, item, false, false, true, true, true, false, false, null, 3, 10, true, true, true));
                     if (playSound)
                         playGenericExplosiveGunSound(soundLoc);
                     break;
@@ -232,6 +233,20 @@ public class Guns {
                     boolean playSound = !(Test.shootGunTest1(p, item, true, true, true));
                     if (playSound)
                         playGenericGunSound(soundLoc);
+                    break;
+                }
+                case "raygun": {
+                    boolean playSound = !(Test.shootRay1(p, item, true, true));
+                    if (playSound) {
+                        Object[] sounds = new Object[]{
+                                new Object[]{Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.5F, 2F},
+                                new Object[]{Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.3F, 0.5F}
+                        };
+                        for (Object var : sounds) {
+                            Object[] sound = (Object[]) var;
+                            p.getWorld().playSound(soundLoc, (Sound) sound[0], (float) sound[1], (float) sound[2]);
+                        }
+                    }
                     break;
                 }
                 default:

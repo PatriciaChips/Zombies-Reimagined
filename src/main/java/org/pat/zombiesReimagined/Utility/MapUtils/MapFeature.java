@@ -324,7 +324,7 @@ public class MapFeature implements Cloneable {
         if (type == FeatureType.WINDOW) {
             for (Block block1 : extraBlocks) {
                 Material checkMat = block1.getLocation().getBlock().getType();
-                if (Tag.SLABS.isTagged(material))
+                if (!Tag.SLABS.isTagged(material))
                     this.material = Material.OAK_SLAB;
                 if (checkMat != material) {
                     for (Player player : Bukkit.getOnlinePlayers()) {

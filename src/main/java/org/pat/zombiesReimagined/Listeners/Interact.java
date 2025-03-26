@@ -1,41 +1,19 @@
 package org.pat.zombiesReimagined.Listeners;
 
-import org.bukkit.*;
-import org.bukkit.Color;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.Chest;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
-import org.joml.Matrix4f;
-import org.pat.pattyEssentialsV3.ColoredText;
-import org.pat.pattyEssentialsV3.Utils;
-import org.pat.zombiesReimagined.Commands.Test;
-import org.pat.zombiesReimagined.Commands.ZombiesItems;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Dev;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Guns;
-import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
-import org.pat.zombiesReimagined.Utility.ItemUtils.UseType;
-import org.pat.zombiesReimagined.Utility.MapUtils.FeatureType;
-import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
-import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.InteractStructure;
-import org.pat.zombiesReimagined.Utility.MapUtils.StructUtils.SpawnStructure;
 import org.pat.zombiesReimagined.Utility.ZUtils;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.List;
 
 public class Interact implements Listener {
 

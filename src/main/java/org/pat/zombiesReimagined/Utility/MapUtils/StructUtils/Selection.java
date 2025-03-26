@@ -4,6 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -97,7 +98,8 @@ public class Selection {
             blockDisplay.setBlock(Material.WHITE_STAINED_GLASS.createBlockData());
             blockDisplay.setMetadata(p.getUniqueId().toString(), new FixedMetadataValue(ZUtils.plugin, p.getUniqueId().toString()));
             blockDisplay.setGlowing(true);
-            blockDisplay.setTransformationMatrix(new Matrix4f().scaleLocal(0.99F));
+            blockDisplay.setBrightness(new Display.Brightness(8, 8));
+            blockDisplay.setTransformationMatrix(new Matrix4f().scaleLocal(0.99F, -0.99F, 0.99F).translateLocal(0, 0.99F, 0));
             Selection.selectionDisplay.put(p, blockDisplay);
         }
     }

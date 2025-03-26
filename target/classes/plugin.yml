@@ -8,5 +8,5 @@ depend:
 commands:
   ztest:
     permission: zombies.dev
-  zitems:
+  z:
     permission: zombies.dev

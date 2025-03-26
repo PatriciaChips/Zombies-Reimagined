@@ -29,6 +29,7 @@ public class IdentifiedStructures {
         gunIdentifiers.put(Material.GREEN_CONCRETE, new MapFeature(FeatureType.GUN, 100, 50, "rpg"));
         gunIdentifiers.put(Material.LIME_CONCRETE, new MapFeature(FeatureType.GUN, 100, 50, "smg"));
         gunIdentifiers.put(Material.CYAN_CONCRETE, new MapFeature(FeatureType.GUN, 100, 50, "tommy_gun"));
+        gunIdentifiers.put(Material.BLUE_CONCRETE, new MapFeature(FeatureType.GUN, 100, 50, "raygun"));
 
         /** POWERUP */ //WOOL
         powerupIndentifiers.put(Material.LIGHT_GRAY_WOOL, new MapFeature(FeatureType.POWERUP, 250, "Fast Revive"));

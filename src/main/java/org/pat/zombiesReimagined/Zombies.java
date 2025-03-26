@@ -8,7 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.zombiesReimagined.Commands.Test;
-import org.pat.zombiesReimagined.Commands.ZombiesItems;
+import org.pat.zombiesReimagined.Commands.Z;
 import org.pat.zombiesReimagined.Listeners.Interact;
 import org.pat.zombiesReimagined.Listeners.Join;
 import org.pat.zombiesReimagined.Listeners.SwapItem;
@@ -28,7 +28,7 @@ public final class Zombies extends JavaPlugin {
 
         /** Initialize commands */
         getCommand("ztest").setExecutor(new Test());
-        getCommand("zitems").setExecutor(new ZombiesItems());
+        getCommand("z").setExecutor(new Z());
 
         /** Initialize listeners */
         getServer().getPluginManager().registerEvents(new Interact(), this);

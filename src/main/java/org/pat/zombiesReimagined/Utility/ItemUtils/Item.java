@@ -182,13 +182,14 @@ public class Item implements Cloneable {
     }
 
     public void swapModel(Player p, ItemStack item, boolean isReload) {
+        if (hasMaglessModel) {
             ItemMeta meta = item.getItemMeta(); // Get the current ItemMeta (used for properties like name, lore)
             if (meta != null) {
                 if (useModel) {
                     boolean changeMeta = false;
                     if (usingMagModel || isReload) {
                         if (ammo == 0 || isReload) {
-                            meta.setItemModel(new NamespacedKey("guns",  (hasMaglessModel) ? "_magless_" + key:key));
+                            meta.setItemModel(new NamespacedKey("guns", (hasMaglessModel) ? "_magless_" + key : key));
                             changeMeta = true;
                             usingMagModel = false;
                         }
@@ -209,6 +210,7 @@ public class Item implements Cloneable {
                     }
                 }
             }
+        }
     }
 
     public static Item getItem(ItemStack item) {
