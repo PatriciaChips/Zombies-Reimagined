@@ -317,7 +317,7 @@ public class Test implements TabExecutor {
         Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
         Vector dir = loc.getDirection();
 
-        loc.getWorld().spawnParticle(Particle.DUST, loc, 3, 0, 0 ,0, new Particle.DustOptions(Color.fromRGB(140, 240, 70), 0.8F));
+        loc.getWorld().spawnParticle(Particle.DUST, loc, 3, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(140, 240, 70), 0.8F));
 
         Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0);
         float distance = (variables.length > 0 ? (float) variables[0] : gun.getRange());
@@ -346,16 +346,19 @@ public class Test implements TabExecutor {
         //}, 1);
 
         if (hitLocation != null) {
+
             int ranRot = new Random().nextInt(91);
             Location ploomLoc = hitLocation.clone();
             ploomLoc.setDirection(createHoleVector(hitLocation));
+
+            createLightSource(ploomLoc.clone().add(ploomLoc.getDirection().multiply(0.5)), 10, 1, 5, 10);
 
             double dmg = 3;
 
             if (variables.length == 3) {
                 LivingEntity entity = (LivingEntity) variables[2];
                 entity.damage(0);
-                entity.setHealth(entity.getHealth() - (dmg/3) < 0 ? 0 : entity.getHealth() - (dmg/3));
+                entity.setHealth(entity.getHealth() - (dmg / 3) < 0 ? 0 : entity.getHealth() - (dmg / 3));
                 Vector vec = entity.getLocation().toVector().subtract(ploomLoc.toVector()).normalize().multiply(0.3);
                 if (entity.getHealth() > 0)
                     entity.setVelocity(vec);
@@ -378,7 +381,7 @@ public class Test implements TabExecutor {
                 for (int rot : new int[]{0, 45}) {
                     BlockDisplay ploomDisplay = loc.getWorld().spawn(ploomLoc, BlockDisplay.class);
                     ploomDisplay.setBrightness(new Display.Brightness(14, 14));
-                    ploomDisplay.setBlock(Material.YELLOW_STAINED_GLASS.createBlockData());
+                    ploomDisplay.setBlock(Material.OCHRE_FROGLIGHT.createBlockData());
                     ploomDisplay.setTransformationMatrix(new Matrix4f().scale(1.5F, 1.5F, 0.1F).translate(-0.5F, -0.5F, 0).rotateLocalZ((float) Math.toRadians(ranRot + rot)));
                     ploomDisplay.setInterpolationDelay(-1);
                     ploomDisplay.setInterpolationDuration(3);
@@ -482,62 +485,68 @@ public class Test implements TabExecutor {
         new BukkitRunnable() {
             int i = 0;
             Location prevLoc = null;
-
             public void run() {
 
-                Object[] variables1 = getLookingAtBlockSpot(adjustedLoc.clone(), p, (float) dir.length(), 0.001F);
-                float distance = (float) variables1[0];
-                Location hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
+                adjustedLoc.getWorld().playSound(adjustedLoc, Sound.BLOCK_SAND_BREAK, 0.1F, 0.5F);
+                adjustedLoc.getWorld().playSound(adjustedLoc, Sound.BLOCK_SAND_BREAK, 0.08F, 1.2F);
 
-                if (hitLocation != null && !MapFeature.isMaterialSafe(hitLocation.getBlock().getType()) || variables1.length == 3) {
-
-                    double dirStr = dir.length();
-
-                    dir.normalize();
-
-                    Vector blockNormalVec = getBlockFaceDirection(hitLocation).getDirection();
-
-                    hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_SHIELD_BLOCK, 0.2F, 1.4F);
-                    hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_SHIELD_BLOCK, 0.1F, 1.8F);
-
-                    if (canBounce && variables1.length != 3) {
-                        if (variables1.length == 3) {
-                            Location tL = ((Entity) variables1[2]).getLocation();
-                            tL.setY(hitLocation.getY());
-                            blockNormalVec = hitLocation.toVector().subtract(tL.toVector());
-                        }
-                        blockNormalVec.normalize();
-
-                        double dotProduct = dir.dot(blockNormalVec);
-
-                        Vector reflected = dir.subtract(blockNormalVec.clone().multiply(2 * dotProduct));
-
-                        reflected.setX(reflected.getX() / 2);
-                        reflected.setZ(reflected.getZ() / 2);
-
-                        adjustedLoc.setDirection(reflected.multiply(dirStr).multiply(depletionRate));
-                        adjustedLoc.set(hitLocation.getX(), hitLocation.getY(), hitLocation.getZ());
-                        adjustedLoc.add(blockNormalVec.multiply(0.01));
-
-                        dir.setY(dir.getY() + gravity);
-                        dir.multiply(depletionRate);
-
-                    } else {
-                        boolean showPloom = !(variables1.length == 3);
-                        createExplosion(adjustedLoc.clone(), blockNormalVec, 150, 20, showPloom, dmgRadius, dmg); //(getBlockFaceFromNormal(blockNormalVec) == BlockFace.DOWN || getBlockFaceFromNormal(blockNormalVec) == BlockFace.UP) ? true:false
-                        cancel();
-                    }
+                if (dir.length() <= 0.2 && !MapFeature.isMaterialSafe(adjustedLoc.clone().add(0, -0.1, 0).getBlock().getType())) {
 
                 } else {
-                    if (i != 0) {
-                        dir.setY(dir.getY() + gravity);
-                        dir.multiply(depletionRate);
-                        if (MapFeature.isMaterialSafe(adjustedLoc.clone().add(dir).getBlock().getType())) {
-                            adjustedLoc.setDirection(dir);
-                            adjustedLoc.add(dir);
+                    Object[] variables1 = getLookingAtBlockSpot(adjustedLoc.clone(), p, (float) dir.length(), 0.01F);
+                    float distance = (float) variables1[0];
+                    Location hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
+
+                    if (hitLocation != null && !MapFeature.isMaterialSafe(hitLocation.getBlock().getType()) || variables1.length == 3) {
+
+                        double dirStr = dir.length();
+
+                        dir.normalize();
+
+                        Vector blockNormalVec = getBlockFaceDirection(hitLocation).getDirection();
+
+                        hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_SHIELD_BLOCK, 0.08F, 1.4F);
+                        hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_DECORATED_POT_BREAK, 0.1F, 1.8F);
+
+                        if (canBounce && variables1.length != 3) {
+                            if (variables1.length == 3) {
+                                Location tL = ((Entity) variables1[2]).getLocation();
+                                tL.setY(hitLocation.getY());
+                                blockNormalVec = hitLocation.toVector().subtract(tL.toVector());
+                            }
+                            blockNormalVec.normalize();
+
+                            double dotProduct = dir.dot(blockNormalVec);
+
+                            Vector reflected = dir.subtract(blockNormalVec.clone().multiply(2 * dotProduct));
+
+                            reflected.setX(reflected.getX() / 2);
+                            reflected.setZ(reflected.getZ() / 2);
+
+                            adjustedLoc.setDirection(reflected.multiply(dirStr).multiply(depletionRate));
+                            adjustedLoc.set(hitLocation.getX(), hitLocation.getY(), hitLocation.getZ());
+                            adjustedLoc.add(blockNormalVec.multiply(0.01));
+
+                            dir.setY(dir.getY() + gravity);
+                            dir.multiply(depletionRate);
+
                         } else {
-                            dir.setY(dir.getY() - gravity);
-                            dir.multiply(1.01);
+                            boolean showPloom = !(variables1.length == 3);
+                            createExplosion(adjustedLoc.clone(), blockNormalVec, 150, 20, showPloom, dmgRadius, dmg); //(getBlockFaceFromNormal(blockNormalVec) == BlockFace.DOWN || getBlockFaceFromNormal(blockNormalVec) == BlockFace.UP) ? true:false
+                            cancel();
+                        }
+
+                    } else {
+                        if (i != 0) {
+                            dir.setY(dir.getY() + gravity);
+                            dir.multiply(depletionRate);
+                            if (MapFeature.isMaterialSafe(adjustedLoc.clone().add(dir).getBlock().getType())) {
+                                adjustedLoc.setDirection(dir);
+                                adjustedLoc.add(dir);
+                            } else {
+                                dir.setY(dir.getY() - gravity);
+                                dir.multiply(1.01);
+                            }
                         }
                     }
                 }
@@ -609,16 +618,11 @@ public class Test implements TabExecutor {
 
                 i++;
 
-                if (i == gun.getRange() || dir.length() <= 0.01 || !MapFeature.isMaterialSafe(adjustedLoc.getBlock().getType())) {
+                if (i == gun.getRange() || dir.length() <= 0.01) {
                     boolean showPloom = false;
-                    if (!MapFeature.isMaterialSafe(adjustedLoc.getBlock().getType())) {
-                        adjustedLoc.setY(adjustedLoc.getBlock().getRelative(BlockFace.UP).getLocation().getY());
-                        dir.setY(1);
-                        dir.setX(0);
-                        dir.setZ(0);
-                        adjustedLoc.setDirection(dir);
+                    if (!MapFeature.isMaterialSafe(adjustedLoc.clone().add(0, -0.1, 0).getBlock().getType())) {
                         showPloom = true;
-                        dir.normalize();
+                        adjustedLoc.setDirection(new Vector(0, 1, 0));
                     }
                     createExplosion(adjustedLoc.clone(), adjustedLoc.getDirection(), hasPropulsion ? 140 : 500, 25, showPloom, dmgRadius, dmg);
                     cancel();
@@ -660,11 +664,79 @@ public class Test implements TabExecutor {
 
     }
 
+    public static void createLightSource(Location location, int lightLevel, int lightDuration, int toLightDuration, int fromLightDuration) {
+        Location loc = location.clone();
+        Block block = loc.getBlock();
+
+        if (block.getType() != Material.AIR)
+            return;
+
+        if (toLightDuration == 0) {
+            block.setType(Material.LIGHT);
+            Light lightData = (Light) block.getBlockData();
+            lightData.setLevel(lightLevel);
+            block.setBlockData(lightData);
+        } else {
+            block.setType(Material.LIGHT);
+            int iterationAmount = lightLevel / toLightDuration;
+            new BukkitRunnable() {
+                int i = 0;
+
+                public void run() {
+                    i += iterationAmount;
+                    Light lightData = (Light) block.getBlockData();
+
+                    if (i >= 15) {
+                        i = 15;
+                        cancel();
+                    }
+
+                    lightData.setLevel(i);
+                    block.setBlockData(lightData);
+                }
+            }.runTaskTimer(ZUtils.plugin, 0L, 0L);
+        }
+
+        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+            if (loc.getBlock().getType() == Material.LIGHT) {
+                if (fromLightDuration == 0) {
+                    block.setType(Material.AIR);
+                } else {
+                    int iterationAmount = lightLevel / fromLightDuration;
+                    new BukkitRunnable() {
+                        int i = lightLevel;
+
+                        public void run() {
+
+                            if (loc.getBlock().getType() != Material.LIGHT) {
+                                cancel();
+                                return;
+                            }
+
+                            i -= iterationAmount;
+                            Light lightData = (Light) block.getBlockData();
+
+                            if (i <= 0) {
+                                block.setType(Material.AIR);
+                            } else {
+                                lightData.setLevel(i);
+                                block.setBlockData(lightData);
+                            }
+                        }
+                    }.runTaskTimer(ZUtils.plugin, 0L, 0L);
+                }
+            }
+        }, lightDuration);
+
+    }
+
     public static void createExplosion(Location location, Vector dirVec, float bloom, int particleAmount, boolean showPloom, float dmgRadius, float dmg) {
 
         if (!MapFeature.isMaterialSafe(location.clone().add(0, -0.1, 0).getBlock().getType())) {
             dirVec.multiply(1);
         }
+
+        createLightSource(location, 15, 1, 3, 15);
 
         createSpark(location.clone(), dirVec.clone(), 120, 0.04F, 15, 2, 2F, 3, Material.OCHRE_FROGLIGHT);
 
@@ -862,7 +934,7 @@ public class Test implements TabExecutor {
 
         Location flashLoc = createWeaponLocation(p, 0, true, 0);
 
-        Location loc = createWeaponLocation(p, bloom, false, 100);
+        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
         Location loc1 = loc.clone();
 
         loc.getWorld().spawnParticle(Particle.SMOKE, loc.clone().add(p.getEyeLocation().getDirection().multiply(0.2)), 1, 0, 0, 0, 0.01);
@@ -895,16 +967,7 @@ public class Test implements TabExecutor {
             }, 4);
 
             // LIGHT FLASH
-            Location lightFlashLoc = p.getEyeLocation();
-            if (lightFlashLoc.getBlock().getType() == Material.AIR) {
-                lightFlashLoc.getBlock().setType(Material.LIGHT);
-                Light light = (Light) lightFlashLoc.getBlock().getBlockData();
-                light.setLevel(7);
-                lightFlashLoc.getBlock().setBlockData(light);
-                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                    lightFlashLoc.getBlock().setType(Material.AIR);
-                }, 2);
-            }
+            createLightSource(p.getEyeLocation(), 7, 2, 0, 0);
         }
 
         Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0);
@@ -977,16 +1040,7 @@ public class Test implements TabExecutor {
             holeLocation.setDirection(holeVec);
             //holeLocation.setDirection(holeVec);
 
-            Location lightFlashLoc = holeLocation;
-            if (lightFlashLoc.getBlock().getType() == Material.AIR) {
-                lightFlashLoc.getBlock().setType(Material.LIGHT);
-                Light light = (Light) lightFlashLoc.getBlock().getBlockData();
-                light.setLevel(4);
-                lightFlashLoc.getBlock().setBlockData(light);
-                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                    lightFlashLoc.getBlock().setType(Material.AIR);
-                }, 2);
-            }
+            createLightSource(holeLocation, 4, 1, 0, 0);
 
             p.getWorld().playSound(holeLocation, hitLocation.getBlock().getBlockSoundGroup().getBreakSound(), 0.02F, 0.9F);
             if (new Random().nextInt(30) == 9) {
@@ -1074,7 +1128,7 @@ public class Test implements TabExecutor {
             display.remove();
             if (finalTask != null)
                 finalTask.cancel();
-        }, 8);
+        }, 6);
 
         return false;
 

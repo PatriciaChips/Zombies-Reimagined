@@ -37,7 +37,7 @@ public class Guns {
             new Item(UseType.GUN, "Rocket Launcher", Material.WOODEN_SHOVEL, "rpg", false, true, 30, 0, 1, 5, 0, 20, 0),
             new Item(UseType.GUN, "SMG", Material.STONE_HOE, "smg", false, true, 100, 0, 30, 100, 4, 10, 0),
             new Item(UseType.GUN, "Tommy Gun", Material.DIAMOND_HOE, "tommy_gun", false, true, 100, 0, 30, 100, 4, 10, 0),
-            new Item(UseType.GUN, "Ray Gun", Material.GOLDEN_SHOVEL, "raygun", false, true, 40, 4, 30, 100, 4, 10, 0)
+            new Item(UseType.GUN, "Ray Gun", Material.GOLDEN_SHOVEL, "raygun", false, true, 40, 1, 30, 100, 4, 10, 0)
     };
 
     public static Item getGunFromKey(String key) {
