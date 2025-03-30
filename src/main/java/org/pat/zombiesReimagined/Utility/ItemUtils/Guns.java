@@ -62,6 +62,8 @@ public class Guns {
             if (isReload) {
                 if (cItem != null) { // ITEM isn't a gun || isnt registered
                     if (cItem.getExtraAmmo() > 0) {
+                        cItem.swapModel(p, item, true);
+
                         boolean isPump = key.equalsIgnoreCase("shotgun");
 
                         final int iterationDelay = 2;
@@ -126,7 +128,6 @@ public class Guns {
                         p.sendMessage(ColoredText.t("&c&oOUT OF AMMO"));
                         // SOUNDS
                     }
-                    cItem.swapModel(p, item, true);
                 }
                 return true;
             }
@@ -239,8 +240,8 @@ public class Guns {
                     boolean playSound = !(Test.shootRay1(p, item, true, true));
                     if (playSound) {
                         Object[] sounds = new Object[]{
-                                new Object[]{Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.5F, 2F},
-                                new Object[]{Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.3F, 0.5F}
+                                new Object[]{Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.1F, 2F},
+                                new Object[]{Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.08F, 0.5F}
                         };
                         for (Object var : sounds) {
                             Object[] sound = (Object[]) var;

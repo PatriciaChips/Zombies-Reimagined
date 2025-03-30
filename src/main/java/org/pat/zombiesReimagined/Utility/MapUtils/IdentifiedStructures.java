@@ -47,6 +47,9 @@ public class IdentifiedStructures {
 
         /** UNLOCK DOOR */ //WOOD
         unlockDoorIndentifiers.put(Material.OAK_LOG, new MapFeature(FeatureType.UNLOCK_DOOR, 500, "Motel", "Garage", 250));
+        unlockDoorIndentifiers.put(Material.SPRUCE_LOG, new MapFeature(FeatureType.UNLOCK_DOOR, 500, "Motel", "Garage", 250));
+        unlockDoorIndentifiers.put(Material.JUNGLE_LOG, new MapFeature(FeatureType.UNLOCK_DOOR, 500, "Motel", "Garage", 250));
+        unlockDoorIndentifiers.put(Material.DARK_OAK_LOG, new MapFeature(FeatureType.UNLOCK_DOOR, 500, "Motel", "Garage", 250));
 
     }
 

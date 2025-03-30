@@ -81,8 +81,27 @@ public class Dev {
                                                                 Boolean directionCheck = centerLoc.getYaw() == 90.0F || centerLoc.getYaw() == 270.0F;
                                                                 Location loc1 = centerLoc.clone().add(new Vector((!directionCheck) ? 2 : 0, 0, (!directionCheck) ? 0 : 2));
                                                                 Location loc2 = centerLoc.clone().add(new Vector((!directionCheck) ? -2 : 0, 3, (!directionCheck) ? 0 : -2));
-                                                                mapFeature.setExtraBlocks(getBlocksInArea(loc1, loc2));
-                                                                MapFeature.storedStructures.put(mapFeature, centerLoc.add(0.5, -1, 0.5));
+                                                                List<Block> extraBlocks = new ArrayList<>();
+                                                                for (BlockFace face1 : new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST}) {
+                                                                    if (centerLoc.getBlock().getRelative(face1).getType() == Material.BEDROCK) {
+                                                                        Location rightLoc = centerLoc.clone();
+                                                                        rightLoc.setYaw(rightLoc.getYaw() + 90);
+                                                                        Location leftLoc = centerLoc.clone();
+                                                                        leftLoc.setYaw(leftLoc.getYaw() - 90);
+                                                                        extraBlocks.addAll(getBlocksInArea(centerLoc.clone().add(leftLoc.clone().getDirection().normalize().multiply(1)).add(0, 0, 0), centerLoc.clone().add(rightLoc.clone().getDirection().normalize().multiply(2)).add(0, 2, 0).add((centerLoc.getYaw() == 180F) ? centerLoc.getDirection().normalize().multiply(-1):new Vector())));
+                                                                        extraBlocks.add(centerLoc.clone().add(0, 3, 0).getBlock());
+                                                                        extraBlocks.add(centerLoc.clone().add(0, 3, 0).add(rightLoc.getDirection().normalize()).getBlock());
+                                                                        mapFeature.setExtraBlocks(extraBlocks);
+                                                                        centerLoc.add(0.5, -1, 0.5).add(rightLoc.getDirection().normalize().multiply(0.5));
+                                                                        mapFeature.setTwoBlockCenter(true);
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                if (mapFeature.getExtraBlocks() == null || mapFeature.getExtraBlocks().size() == 0) {
+                                                                    mapFeature.setExtraBlocks(getBlocksInArea(loc1, loc2));
+                                                                    centerLoc.add(0.5, -1, 0.5);
+                                                                }
+                                                                MapFeature.storedStructures.put(mapFeature, centerLoc);
                                                                 break; // exit blockface check
                                                             }
                                                         }
@@ -104,81 +123,83 @@ public class Dev {
                                                             MapFeature.storedStructures.put(mapFeature, centerLoc1.clone().add(0.5, 0, 0.5));
                                                             break; // exit blockface check
                                                         } else { /** WINDOW*/
-                                                            MapFeature mapFeature = new MapFeature(FeatureType.WINDOW);
-                                                            for (Block block1 : getBlocksInArea(centerLoc1.clone().getBlock().getRelative(face).getLocation().add(0, 1, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getLocation().add(0, 1, 0).add(leftLoc.getDirection().normalize()))) {
-                                                                if (block1.getType() == Material.BLACK_CONCRETE_POWDER) {
-                                                                    mapFeature.setLoc(block1.getLocation().add(0.5, 1, 0.5)); // Mob spawn location
-                                                                    break;
-                                                                }
-                                                            }
-                                                            List<Block> barricadeBlocks = getBlocksInArea(centerLoc1.clone().getBlock().getRelative(face).getLocation().add(0, 2, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getLocation().add(0, 3, 0).add(leftLoc.getDirection().normalize()));
-                                                            mapFeature.setExtraBlocks(barricadeBlocks);
-                                                            mapFeature.setMaterial(barricadeBlocks.getFirst().getType());
-                                                            MapFeature.storedStructures.put(mapFeature, centerLoc1.clone().add(0.5, 0, 0.5));
-                                                            Location tLoc = centerLoc1.clone();
-                                                            Random random = new Random();
-                                                            new BukkitRunnable() {
-                                                                public void run() {
-
-                                                                    if (!MapFeature.storedStructures.containsKey(mapFeature))
-                                                                        cancel();
-
-                                                                    boolean underAttack = false;
-                                                                    for (Entity entity : getEntities(tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(leftLoc.getDirection()), tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
-                                                                        if (!(entity instanceof Player)) {
-                                                                            boolean containsType = false;
-                                                                            for (Block block2 : mapFeature.getExtraBlocks()) {
-                                                                                Block block1 = block2.getLocation().getBlock();
-                                                                                if (block1.getType() == mapFeature.getMaterial()) {
-                                                                                    containsType = true;
-                                                                                    break;
-                                                                                }
-                                                                            }
-                                                                            if (containsType) {
-                                                                                Block randomBlock;
-                                                                                do {
-                                                                                    int randomIndex = random.nextInt(mapFeature.getExtraBlocks().size()); // Get a random index within the list size
-                                                                                    randomBlock = mapFeature.getExtraBlocks().get(randomIndex).getLocation().getBlock(); // Get the material at the random index
-                                                                                } while (!randomBlock.getType().equals(mapFeature.getMaterial()));
-                                                                                randomBlock.setType(Material.AIR);
-                                                                                block.getLocation().getWorld().playSound(block.getLocation().add(0.5, 0.5, 0.5), Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 0.5F, 1);
-                                                                            }
-                                                                            break;
-                                                                        }
+                                                            if (centerLoc1.clone().add(0, 1, 0).getBlock().getType() != Material.BEDROCK) {
+                                                                MapFeature mapFeature = new MapFeature(FeatureType.WINDOW);
+                                                                for (Block block1 : getBlocksInArea(centerLoc1.clone().getBlock().getRelative(face).getLocation().add(0, 1, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getRelative(face).getLocation().add(0, 1, 0).add(leftLoc.getDirection().normalize()))) {
+                                                                    if (block1.getType() == Material.BLACK_CONCRETE_POWDER) {
+                                                                        mapFeature.setLoc(block1.getLocation().add(0.5, 1, 0.5)); // Mob spawn location
+                                                                        break;
                                                                     }
-                                                                    if (!underAttack) {
-                                                                        for (Entity entity : getEntities(tLoc.clone().add(leftLoc.getDirection()), tLoc.clone().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
-                                                                            if (entity instanceof Player p) {
-                                                                                if (p.isSneaking()) {
-                                                                                    boolean containsType = false;
-                                                                                    for (Block block2 : mapFeature.getExtraBlocks()) {
-                                                                                        Block block1 = block2.getLocation().getBlock();
-                                                                                        if (block1.getType() == Material.AIR) {
-                                                                                            containsType = true;
-                                                                                            break;
-                                                                                        }
+                                                                }
+                                                                List<Block> barricadeBlocks = getBlocksInArea(centerLoc1.clone().getBlock().getRelative(face).getLocation().add(0, 2, 0).add(rightLoc.getDirection().normalize()), centerLoc1.getBlock().getRelative(face).getLocation().add(0, 3, 0).add(leftLoc.getDirection().normalize()));
+                                                                mapFeature.setExtraBlocks(barricadeBlocks);
+                                                                mapFeature.setMaterial(barricadeBlocks.getFirst().getType());
+                                                                MapFeature.storedStructures.put(mapFeature, centerLoc1.clone().add(0.5, 0, 0.5));
+                                                                Location tLoc = centerLoc1.clone();
+                                                                Random random = new Random();
+                                                                new BukkitRunnable() {
+                                                                    public void run() {
+
+                                                                        if (!MapFeature.storedStructures.containsKey(mapFeature))
+                                                                            cancel();
+
+                                                                        boolean underAttack = false;
+                                                                        for (Entity entity : getEntities(tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(leftLoc.getDirection()), tLoc.clone().add(0, 1, 0).getBlock().getRelative(face).getRelative(face).getLocation().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
+                                                                            if (!(entity instanceof Player)) {
+                                                                                boolean containsType = false;
+                                                                                for (Block block2 : mapFeature.getExtraBlocks()) {
+                                                                                    Block block1 = block2.getLocation().getBlock();
+                                                                                    if (block1.getType() == mapFeature.getMaterial()) {
+                                                                                        containsType = true;
+                                                                                        break;
                                                                                     }
-                                                                                    if (containsType) {
-                                                                                        Block randomBlock;
-                                                                                        do {
-                                                                                            int randomIndex = random.nextInt(mapFeature.getExtraBlocks().size()); // Get a random index within the list size
-                                                                                            randomBlock = mapFeature.getExtraBlocks().get(randomIndex).getLocation().getBlock(); // Get the material at the random index
-                                                                                        } while (!randomBlock.getType().equals(Material.AIR));
-                                                                                        randomBlock.setType(mapFeature.getMaterial());
-                                                                                        Slab slab = (Slab) randomBlock.getBlockData();
-                                                                                        slab.setType(Slab.Type.TOP);
-                                                                                        randomBlock.setBlockData(slab);
-                                                                                        block.getLocation().getWorld().playSound(block.getLocation().add(0.5, 0.5, 0.5), Sound.BLOCK_STONE_PLACE, 0.5F, 0.8F);
-                                                                                    }
+                                                                                }
+                                                                                if (containsType) {
+                                                                                    Block randomBlock;
+                                                                                    do {
+                                                                                        int randomIndex = random.nextInt(mapFeature.getExtraBlocks().size()); // Get a random index within the list size
+                                                                                        randomBlock = mapFeature.getExtraBlocks().get(randomIndex).getLocation().getBlock(); // Get the material at the random index
+                                                                                    } while (!randomBlock.getType().equals(mapFeature.getMaterial()));
+                                                                                    randomBlock.setType(Material.AIR);
+                                                                                    block.getLocation().getWorld().playSound(block.getLocation().add(0.5, 0.5, 0.5), Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 0.5F, 1);
                                                                                 }
                                                                                 break;
                                                                             }
                                                                         }
+                                                                        if (!underAttack) {
+                                                                            for (Entity entity : getEntities(tLoc.clone().add(leftLoc.getDirection()), tLoc.clone().add(0, 3, 0).add(rightLoc.getDirection()))) { // Player Shift AREA
+                                                                                if (entity instanceof Player p) {
+                                                                                    if (p.isSneaking()) {
+                                                                                        boolean containsType = false;
+                                                                                        for (Block block2 : mapFeature.getExtraBlocks()) {
+                                                                                            Block block1 = block2.getLocation().getBlock();
+                                                                                            if (block1.getType() == Material.AIR) {
+                                                                                                containsType = true;
+                                                                                                break;
+                                                                                            }
+                                                                                        }
+                                                                                        if (containsType) {
+                                                                                            Block randomBlock;
+                                                                                            do {
+                                                                                                int randomIndex = random.nextInt(mapFeature.getExtraBlocks().size()); // Get a random index within the list size
+                                                                                                randomBlock = mapFeature.getExtraBlocks().get(randomIndex).getLocation().getBlock(); // Get the material at the random index
+                                                                                            } while (!randomBlock.getType().equals(Material.AIR));
+                                                                                            randomBlock.setType(mapFeature.getMaterial());
+                                                                                            Slab slab = (Slab) randomBlock.getBlockData();
+                                                                                            slab.setType(Slab.Type.TOP);
+                                                                                            randomBlock.setBlockData(slab);
+                                                                                            block.getLocation().getWorld().playSound(block.getLocation().add(0.5, 0.5, 0.5), Sound.BLOCK_STONE_PLACE, 0.5F, 0.8F);
+                                                                                        }
+                                                                                    }
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        mapFeature.fillBlankWindowBlocks();
                                                                     }
-                                                                    mapFeature.fillBlankWindowBlocks();
-                                                                }
-                                                            }.runTaskTimer(ZUtils.plugin, 0L, 25L);
-                                                            break; // exit blockface check
+                                                                }.runTaskTimer(ZUtils.plugin, 0L, 25L);
+                                                                break; // exit blockface check
+                                                            }
                                                         }
                                                     }
                                                 } else if (relativeLoc.clone().add(0, 2, 0).getBlock().getType() == Material.BEDROCK) { /** GUN || ARMOUR */

@@ -38,6 +38,7 @@ public class MapFeature implements Cloneable {
     private HashMap<Player, Long> containedTimedPlayers;
     private HashMap<Player, ItemStack> containedPlayersGun;
     private Location loc;
+    private boolean isTwoBlockCenter;
 
     // Constructor for GUN shop
     public MapFeature(FeatureType gun, int gunCost, int ammoCost, String key) {
@@ -110,6 +111,7 @@ public class MapFeature implements Cloneable {
         this.name1 = doorName2;
         this.extraBlocks = new ArrayList<>();
         this.structureEntities = new ArrayList<>();
+        this.isTwoBlockCenter = false;
     }
 
     public MapFeature clone() {
@@ -201,6 +203,10 @@ public class MapFeature implements Cloneable {
         return loc;
     }
 
+    public boolean isTwoBlockCenter() {
+        return isTwoBlockCenter;
+    }
+
     /**
      * SET METHODS
      */
@@ -274,11 +280,16 @@ public class MapFeature implements Cloneable {
         this.loc = loc;
     }
 
+    public void setTwoBlockCenter(boolean twoBlockCenter) {
+        isTwoBlockCenter = twoBlockCenter;
+    }
+
     /**
      * UTILITY METHODS
      */
     public void statusVisibilitySwap(boolean isGlobal) {
         for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendMessage(this.getName() + " | " + this.getType());
             if (containedPlayers != null && containedPlayers.contains(player) || isGlobal) {
                 for (Entity entity : toBEHiddenEntities) {
                     player.hideEntity(ZUtils.plugin, entity);

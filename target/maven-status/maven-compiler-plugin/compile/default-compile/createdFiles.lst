@@ -16,6 +16,7 @@ org\pat\zombiesReimagined\Utility\ZUtils.class
 org\pat\zombiesReimagined\Commands\Test$4.class
 org\pat\zombiesReimagined\Commands\Z.class
 org\pat\zombiesReimagined\Zombies$1.class
+org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure$4.class
 org\pat\zombiesReimagined\Utility\MapUtils\MapFeature.class
 org\pat\zombiesReimagined\Listeners\Join.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\SpawnStructure$2.class

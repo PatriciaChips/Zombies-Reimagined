@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.pattyEssentialsV3.Utils;
 import org.pat.zombiesReimagined.Commands.Test;
@@ -45,6 +46,33 @@ public class InteractStructure {
                             if (block.getX() == strucBlock.getX() && block.getY() == strucBlock.getY() && block.getZ() == strucBlock.getZ()) {
                                 String sideName = "";
                                 int sideCost = 0;
+                                int tDirectionInt = 0;
+                                float txAddon = 0;
+                                float tzAddon = 0;
+                                boolean isWestSouth = e.getBlockFace() == BlockFace.EAST || e.getBlockFace() == BlockFace.WEST;
+                                switch (e.getBlockFace()) {
+                                    case NORTH:
+                                        tzAddon = -0.5F;
+                                        break;
+                                    case EAST:
+                                        txAddon = 0.5F;
+                                        break;
+                                    case SOUTH:
+                                        tzAddon = 0.5F;
+                                        break;
+                                    case WEST:
+                                        txAddon = -0.5F;
+                                        break;
+                                }
+                                float xAddon = txAddon;
+                                float zAddon = tzAddon;
+                                switch (e.getBlockFace()) {
+                                    case EAST, NORTH:
+                                        tDirectionInt = 1;
+                                        break;
+                                    case WEST, SOUTH:
+                                        tDirectionInt = -1;
+                                }
                                 if (e.getBlockFace().equals(getBlockFacesFromYaw(loc.getYaw())[0])) {
                                     sideName = feature.getName();
                                     sideCost = feature.getCost();
@@ -52,6 +80,7 @@ public class InteractStructure {
                                     sideName = feature.getName1();
                                     sideCost = feature.getCost1();
                                 }
+                                final int directionInt = tDirectionInt;
                                 if (sideCost > 0) {
                                     p.sendMessage(sideName + ": $" + sideCost);
                                     // CHECK IF THEY HAVE ENOUYGH MONEY
@@ -66,37 +95,128 @@ public class InteractStructure {
                                         entity.remove();
                                     }
                                     int i = 23;
+                                    float division = 4; //iteration points for rotating doors (MAX 20)
+                                    float yAddon = -4;
+                                    boolean isRotatingDoor = loc.clone().getBlock().getType() == Material.BEDROCK;
+                                    int groupIteration = 1;
                                     for (Block[] group : sortBlocksByY(feature.getExtraBlocks())) {
+                                        int sideCheck = 1;
                                         for (Block structureBlocks : group) {
+                                            if (sideCheck == 5)
+                                                sideCheck = 1;
+
+                                            if (groupIteration == 4) {
+                                                if (sideCheck == 1)
+                                                    sideCheck++;
+                                                if (sideCheck == 4)
+                                                    sideCheck--;
+                                            }
+
+                                            Location rightLoc = loc.clone();
+                                            rightLoc.setYaw(rightLoc.getYaw() + 90);
+                                            Location leftLoc = loc.clone();
+                                            leftLoc.setYaw(leftLoc.getYaw() - 90);
+
                                             Location bLoc = structureBlocks.getLocation();
                                             BlockData data = structureBlocks.getBlockData();
                                             Material blockType = structureBlocks.getType();
+
+                                            //** DEBUG
+                                            Location dLoc = bLoc.clone();
+                                            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                                dLoc.getBlock().setType(blockType);
+                                                dLoc.getBlock().setBlockData(data);
+                                            }, 60);
+                                            //*/
+
+                                            p.sendMessage(loc.getYaw() + "");
+
+                                            if (isRotatingDoor) {
+                                                if (feature.isTwoBlockCenter()) {
+                                                    bLoc.setX(loc.getX());
+                                                    bLoc.setZ(loc.getZ());
+                                                    if (sideCheck == 1 || sideCheck == 2) {
+                                                        bLoc.add(rightLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -2:2));
+                                                    } else if (sideCheck == 3 || sideCheck == 4) {
+                                                        bLoc.add(leftLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -2:2));
+                                                    }
+                                                    bLoc.add(xAddon, 0, zAddon);
+                                                } else {
+                                                    bLoc.setY(loc.getY() + 5);
+                                                    bLoc.add(0.5, 0, 0.5);
+                                                }
+                                            }
+
                                             BlockDisplay blockDisplay = bLoc.getWorld().spawn(bLoc, BlockDisplay.class);
-                                            blockDisplay.setBrightness(new Display.Brightness(9, 9));
-                                            blockDisplay.setInterpolationDuration(20);
-                                            blockDisplay.setInterpolationDelay(2);
+                                            feature.setStructureEntities(blockDisplay);
+                                            //blockDisplay.setBrightness(new Display.Brightness(9, 9));
+                                            blockDisplay.setInterpolationDuration((isRotatingDoor) ? 20 / (int) division : 20); //20
+                                            blockDisplay.setInterpolationDelay(-1);
                                             blockDisplay.setBlock(data);
+                                            Matrix4f tinitialMatrix = new Matrix4f().translateLocal(-0.5F, yAddon, -0.5F);
+                                            if (isRotatingDoor && !feature.isTwoBlockCenter())
+                                                blockDisplay.setTransformationMatrix(tinitialMatrix);
+                                            if (feature.isTwoBlockCenter() && isRotatingDoor) {
+                                                tinitialMatrix = new Matrix4f().translateLocal(0, 0, -0.5F);
+                                                switch ((int) loc.getYaw()) {
+                                                    case 90, 270:
+                                                        tinitialMatrix = new Matrix4f().translateLocal((e.getBlockFace() == BlockFace.EAST) ? -1:0, 0, ((sideCheck == 1) ? 0 : sideCheck == 2 ? 1 : sideCheck == 3 ? -2 : sideCheck == 4 ? -1 : 0));
+                                                        break;
+                                                    case 0, 180:
+                                                        tinitialMatrix = new Matrix4f().translateLocal(((sideCheck == 1) ? 0 : sideCheck == 2 ? 1 : sideCheck == 3 ? -2 : sideCheck == 4 ? -1 : 0), 0, (e.getBlockFace() == BlockFace.SOUTH) ? -1:0);
+                                                        break;
+                                                }
+                                                blockDisplay.setTransformationMatrix(tinitialMatrix);
+                                            }
+
+                                            final Matrix4f initialMatrix = tinitialMatrix;
+
                                             Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
                                                 structureBlocks.setType(Material.AIR);
                                             }, 2);
+
+                                            int fSideCheck = sideCheck;
                                             Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                                                blockDisplay.setTransformationMatrix(new Matrix4f().translate(0, 4.01F, 0));
-                                            }, 3);
+                                                if (isRotatingDoor) {
+                                                    new BukkitRunnable() {
+                                                        Matrix4f tMat = initialMatrix;
+                                                        int iterations = 0;
+                                                        public void run() {
+                                                            blockDisplay.setInterpolationDelay(-1);
+                                                            blockDisplay.setInterpolationDuration(20 / (int) division);
+                                                            if (feature.isTwoBlockCenter()) {
+                                                                Matrix4f matrix4f = new Matrix4f().rotateY((float) Math.toRadians(-75 * directionInt / division * ((fSideCheck == 1 || fSideCheck == 2) ? 1:-1))).mul(tMat);
+                                                                tMat = matrix4f;
+                                                                blockDisplay.setTransformationMatrix(matrix4f);
+                                                            } else {
+                                                                Matrix4f matrix4f = new Matrix4f().rotateZ((float) Math.toRadians((isWestSouth) ? -90 * directionInt / division : 0)).rotateX((float) Math.toRadians((!isWestSouth) ? -90 * directionInt / division : 0)).mul(tMat);
+                                                                tMat = matrix4f;
+                                                                blockDisplay.setTransformationMatrix(matrix4f);
+                                                            }
+                                                            iterations++;
+                                                            if (iterations == division)
+                                                                cancel();
+                                                        }
+                                                    }.runTaskTimer(ZUtils.plugin, 0L, 20 / (int) division);
+                                                } else {
+                                                    blockDisplay.setTransformationMatrix(new Matrix4f().translate(0, 4.01F, 0));
+                                                }
+                                            }, 3); //3
+
                                             Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                                                blockDisplay.remove();
+                                                if (!isRotatingDoor)
+                                                    blockDisplay.remove();
                                             }, i);
+
                                             if (bLoc.getY() == loc.getY() + 1) {
                                                 bLoc.getWorld().spawnParticle(Particle.BLOCK, bLoc.clone().add(0.5, 0, 0.5), 10, 0.7, 0.1, 0.7, data);
                                                 bLoc.getWorld().spawnParticle(Particle.DUST, bLoc.clone().add(0.5, 2, 0.5), 10, 0.7, 1.5, 0.7, new Particle.DustOptions(Color.fromRGB(135, 135, 135), 0.75F));
                                             }
-                                            //** DEBUG
-                                            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                                                bLoc.getBlock().setType(blockType);
-                                                bLoc.getBlock().setBlockData(data);
-                                            }, 60);
-                                            //*/
+                                            sideCheck += groupIteration <= 3 ? 1 : 2;
                                         }
                                         i -= 4;
+                                        yAddon += 1F;
+                                        groupIteration++;
                                     }
                                 }
                                 break;
@@ -290,7 +410,7 @@ public class InteractStructure {
                                 Vector vec = SpawnStructure.blockFaceToVector(button.getFacing(), button.getAttachedFace());
                                 Test.createSpark(block.getLocation().add(0.5, 0.5, 0.5).add(vec.clone().multiply(-0.4)), vec, 100, 0.05F, 7, 2, 0.2F, 4, Material.PURPLE_STAINED_GLASS);
                                 boolean isClear = MapFeature.isMaterialSafe(loc.clone().add(0, 1, 0).getBlock().getType());
-                                Location lightSparkLoc = loc.clone().add(0, (isClear) ? 4.75:4, 0).add(loc.getDirection());
+                                Location lightSparkLoc = loc.clone().add(0, (isClear) ? 4.75 : 4, 0).add(loc.getDirection());
                                 Test.createSpark(lightSparkLoc, new Vector(0, 1, 0), 360, 0.05F, 14, 2, 0.35F, 3, Material.YELLOW_STAINED_GLASS);
                                 feature.addContainedPlayers(p);
                                 feature.statusVisibilitySwap(false);
@@ -299,7 +419,7 @@ public class InteractStructure {
                                 for (Block block1 : feature.getExtraBlocks()) {
                                     if (Tag.STAIRS.isTagged(block1.getType())) {
                                         boolean isTop = ((Stairs) block1.getBlockData()).getHalf() == Bisected.Half.TOP;
-                                        Location dLoc = block1.getLocation().add(0.5, (isTop) ? 0:0.5F, 0.5);
+                                        Location dLoc = block1.getLocation().add(0.5, (isTop) ? 0 : 0.5F, 0.5);
                                         dLoc.setDirection(loc.getDirection());
                                         dispenseItems(p, dLoc, new ItemStack[]{new ItemStack(Material.valueOf(loc.clone().add(loc.getDirection()).getBlock().getType().toString().replace("WOOL", "DYE")))});
                                         break;
@@ -313,6 +433,23 @@ public class InteractStructure {
                 }
             }
         }
+    }
+
+    public static List<Location> generateCurvedPath(Location startLocation, Location targetLocation, int steps, double curveIntensity) {
+        List<Location> path = new ArrayList<>();
+
+        for (int i = 0; i < steps; i++) {
+            double t = (double) i / (steps - 1); // Parametric value from 0 to 1
+
+            // Use sine function for a curved path (you can change this for more complex curves)
+            double x = startLocation.getX() + t * (targetLocation.getX() - startLocation.getX());
+            double y = startLocation.getY() + Math.sin(t * Math.PI) * curveIntensity;  // Curved movement in the Y axis
+            double z = startLocation.getZ() + t * (targetLocation.getZ() - startLocation.getZ());
+
+            path.add(new Location(startLocation.getWorld(), x, y, z));
+        }
+
+        return path;
     }
 
     public static void dispenseItems(Player p, Location loc, ItemStack[] items) {
