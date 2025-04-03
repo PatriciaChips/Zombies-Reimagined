@@ -2,6 +2,7 @@ package org.pat.zombiesReimagined.Utility.MapUtils;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.type.Door;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
@@ -39,6 +40,7 @@ public class MapFeature implements Cloneable {
     private HashMap<Player, ItemStack> containedPlayersGun;
     private Location loc;
     private boolean isTwoBlockCenter;
+    private DoorType doorType;
 
     // Constructor for GUN shop
     public MapFeature(FeatureType gun, int gunCost, int ammoCost, String key) {
@@ -207,6 +209,10 @@ public class MapFeature implements Cloneable {
         return isTwoBlockCenter;
     }
 
+    public DoorType getDoorType() {
+        return doorType;
+    }
+
     /**
      * SET METHODS
      */
@@ -284,6 +290,10 @@ public class MapFeature implements Cloneable {
         isTwoBlockCenter = twoBlockCenter;
     }
 
+    public void setDoorType(DoorType doorType) {
+        this.doorType = doorType;
+    }
+
     /**
      * UTILITY METHODS
      */
@@ -351,7 +361,7 @@ public class MapFeature implements Cloneable {
     public static boolean isMaterialSafe(Material mat) {
         switch (mat) {
             case AIR, REPEATER, COMPARATOR, TORCH, SOUL_TORCH, CHAIN, END_ROD, LIGHTNING_ROD, LADDER, FLOWER_POT,
-                 BREWING_STAND, LIGHT, MOSS_CARPET, PALE_MOSS_CARPET:
+                 BREWING_STAND, LIGHT, MOSS_CARPET, PALE_MOSS_CARPET, BARRIER:
                 return true;
         }
 
@@ -362,7 +372,12 @@ public class MapFeature implements Cloneable {
                 || Tag.ALL_SIGNS.isTagged(mat)
                 || Tag.SLABS.isTagged(mat)
                 || Tag.STAIRS.isTagged(mat)
-                || Tag.WOOL_CARPETS.isTagged(mat))
+                || Tag.WOOL_CARPETS.isTagged(mat)
+                || Tag.BANNERS.isTagged(mat)
+                || Tag.TRAPDOORS.isTagged(mat)
+                || Tag.FENCE_GATES.isTagged(mat)
+                || Tag.FENCES.isTagged(mat)
+                || Tag.WALLS.isTagged(mat))
             return true;
 
         return false;

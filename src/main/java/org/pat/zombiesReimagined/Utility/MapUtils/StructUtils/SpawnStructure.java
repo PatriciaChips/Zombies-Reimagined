@@ -19,6 +19,7 @@ import org.joml.Matrix4f;
 import org.pat.pattyEssentialsV3.ColoredText;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
 import org.pat.zombiesReimagined.Utility.ItemUtils.UseType;
+import org.pat.zombiesReimagined.Utility.MapUtils.DoorType;
 import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.ZUtils;
@@ -38,7 +39,12 @@ public class SpawnStructure {
 
             switch (feature.getType()) {
                 case UNLOCK_DOOR: {
-                    loc.add(0, 3.3, 0);
+                    loc.add(0, 3.3 - ((feature.getDoorType() == DoorType.doubleRotate3x3) ? 0.9F:0), 0);
+
+                    float adjustTextSize = 0;
+
+                    if (feature.getDoorType() == DoorType.doubleRotate3x3)
+                        adjustTextSize = -0.2F;
 
                     TextDisplay nameText = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(0.501)), TextDisplay.class);
                     nameText.setBrightness(textBrightness);
@@ -47,7 +53,7 @@ public class SpawnStructure {
                     nameText.setBillboard(Display.Billboard.FIXED);
                     nameText.setText(feature.getName());
                     nameText.setAlignment(TextDisplay.TextAlignment.CENTER);
-                    nameText.setTransformationMatrix(new Matrix4f().scaleLocal(2.5F, 2.5F, 2.5F));
+                    nameText.setTransformationMatrix(new Matrix4f().scaleLocal(2.5F));
 
                     TextDisplay nameText1 = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
                     nameText1.setBrightness(textBrightness);
@@ -56,8 +62,7 @@ public class SpawnStructure {
                     nameText1.setBillboard(Display.Billboard.FIXED);
                     nameText1.setText(feature.getName1());
                     nameText1.setAlignment(TextDisplay.TextAlignment.CENTER);
-                    nameText1.setTransformationMatrix(new Matrix4f().scaleLocal(-2.5F, 2.5F, -2.5F));  // Flip horizontally
-
+                    nameText1.setTransformationMatrix(new Matrix4f().scaleLocal(2.5F + adjustTextSize).rotateY((float) Math.toRadians(180))); // Flip horizontally
                     loc.add(0, -0.2, 0);
                     String underText = ColoredText.t("&7Click to purchase!");
 
@@ -66,9 +71,8 @@ public class SpawnStructure {
                     nameUnderText.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                     nameUnderText.setShadowed(true);
                     nameUnderText.setBillboard(Display.Billboard.FIXED);
-                    nameUnderText.setText(underText);
                     nameUnderText.setAlignment(TextDisplay.TextAlignment.CENTER);
-                    nameUnderText.setTransformationMatrix(new Matrix4f().scaleLocal(1F));
+                    nameUnderText.setTransformationMatrix(new Matrix4f().scaleLocal(1F + adjustTextSize));
 
                     TextDisplay nameUnderText1 = loc.getWorld().spawn(loc.clone().add(loc.getDirection().multiply(-0.501)), TextDisplay.class);
                     nameUnderText1.setBrightness(textBrightness);
@@ -77,7 +81,7 @@ public class SpawnStructure {
                     nameUnderText1.setBillboard(Display.Billboard.FIXED);
                     nameUnderText1.setText(underText);
                     nameUnderText1.setAlignment(TextDisplay.TextAlignment.CENTER);
-                    nameUnderText1.setTransformationMatrix(new Matrix4f().scaleLocal(-1F, 1F, -1F));  // Flip horizontally
+                    nameUnderText1.setTransformationMatrix(new Matrix4f().scaleLocal(1 + adjustTextSize).rotateY((float) Math.toRadians(180))); // Flip horizontally
 
                     loc.add(0, -0.5, 0);
 

@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 import org.pat.pattyEssentialsV3.ColoredText;
+import org.pat.zombiesReimagined.Utility.MapUtils.DoorType;
 import org.pat.zombiesReimagined.Utility.MapUtils.FeatureType;
 import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
@@ -71,10 +72,12 @@ public class Dev {
                                                             directionLoc = relativeLoc.getBlock().getRelative(face).getLocation().clone().add(0, -1, 0);
                                                         }
                                                         if (directionLoc != null) {
+
                                                             checkedBlocks.add(centerLoc.getBlock());
                                                             checkedBlocks.add(relativeLoc.getBlock().getRelative(face).getLocation().getBlock());
                                                             checkedBlocks.add(loc.getBlock());
                                                             checkedBlocks.add(directionLoc.getBlock());
+
                                                             centerLoc = adjustLocationDirections(centerLoc, directionLoc);
                                                             if (IdentifiedStructures.unlockDoorIndentifiers.containsKey(centerLoc.clone().add(0, -2, 0).getBlock().getType())) { //UNLOCK_DOOR indentified
                                                                 MapFeature mapFeature = IdentifiedStructures.unlockDoorIndentifiers.get(centerLoc.clone().add(0, -2, 0).getBlock().getType()).clone();
@@ -84,22 +87,35 @@ public class Dev {
                                                                 List<Block> extraBlocks = new ArrayList<>();
                                                                 for (BlockFace face1 : new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST}) {
                                                                     if (centerLoc.getBlock().getRelative(face1).getType() == Material.BEDROCK) {
-                                                                        Location rightLoc = centerLoc.clone();
-                                                                        rightLoc.setYaw(rightLoc.getYaw() + 90);
-                                                                        Location leftLoc = centerLoc.clone();
-                                                                        leftLoc.setYaw(leftLoc.getYaw() - 90);
-                                                                        extraBlocks.addAll(getBlocksInArea(centerLoc.clone().add(leftLoc.clone().getDirection().normalize().multiply(1)).add(0, 0, 0), centerLoc.clone().add(rightLoc.clone().getDirection().normalize().multiply(2)).add(0, 2, 0).add((centerLoc.getYaw() == 180F) ? centerLoc.getDirection().normalize().multiply(-1):new Vector())));
+                                                                        extraBlocks.addAll(getBlocksInArea(centerLoc.clone().add(getLeftVec(centerLoc).normalize().multiply(1)).add(0, 0, 0), centerLoc.clone().add(getRightVec(centerLoc).normalize().multiply(2)).add(0, 2, 0).add((centerLoc.getYaw() == 180F) ? centerLoc.getDirection().normalize().multiply(-1):new Vector())));
                                                                         extraBlocks.add(centerLoc.clone().add(0, 3, 0).getBlock());
-                                                                        extraBlocks.add(centerLoc.clone().add(0, 3, 0).add(rightLoc.getDirection().normalize()).getBlock());
+                                                                        extraBlocks.add(centerLoc.clone().add(0, 3, 0).add(getRightVec(centerLoc).normalize()).getBlock());
                                                                         mapFeature.setExtraBlocks(extraBlocks);
-                                                                        centerLoc.add(0.5, -1, 0.5).add(rightLoc.getDirection().normalize().multiply(0.5));
+                                                                        if (centerLoc.clone().add(0, -1, 0).getBlock().getType() == Material.BEDROCK) {
+                                                                            mapFeature.setDoorType(DoorType.doubleRotate4x4);
+                                                                        } else {
+                                                                            mapFeature.setDoorType(DoorType.upSlide4x4);
+                                                                        }
+                                                                        centerLoc.add(0.5, -1, 0.5).add(getRightVec(centerLoc).normalize().multiply(0.5));
                                                                         mapFeature.setTwoBlockCenter(true);
                                                                         break;
                                                                     }
                                                                 }
                                                                 if (mapFeature.getExtraBlocks() == null || mapFeature.getExtraBlocks().size() == 0) {
+                                                                    if (directionLoc.clone().add(0, -1, 0).getBlock().getType() == Material.BEDROCK) { // 3x3 Door
+                                                                        mapFeature.setExtraBlocks(getBlocksInArea(centerLoc.clone().add(getRightVec(centerLoc)), centerLoc.clone().add(0, 2, 0).add(getLeftVec(centerLoc))));
+                                                                        centerLoc.add(0.5, -1, 0.5);
+                                                                        mapFeature.setDoorType(DoorType.doubleRotate3x3);
+                                                                    }
+                                                                }
+                                                                if (mapFeature.getExtraBlocks() == null || mapFeature.getExtraBlocks().size() == 0) { // default door size && types
                                                                     mapFeature.setExtraBlocks(getBlocksInArea(loc1, loc2));
                                                                     centerLoc.add(0.5, -1, 0.5);
+                                                                    if (centerLoc.getBlock().getType() == Material.BEDROCK) {
+                                                                        mapFeature.setDoorType(DoorType.upRotate5x4);
+                                                                    } else {
+                                                                        mapFeature.setDoorType(DoorType.upSlide5x4);
+                                                                    }
                                                                 }
                                                                 MapFeature.storedStructures.put(mapFeature, centerLoc);
                                                                 break; // exit blockface check
@@ -320,6 +336,18 @@ public class Dev {
         centerLoc.setDirection(direction);
 
         return centerLoc;
+    }
+
+    public static Vector getLeftVec(Location centerLoc) {
+        Location leftLoc = centerLoc.clone();
+        leftLoc.setYaw(leftLoc.getYaw() - 90);
+        return leftLoc.getDirection();
+    }
+
+    public static Vector getRightVec(Location centerLoc) {
+        Location rightLoc = centerLoc.clone();
+        rightLoc.setYaw(rightLoc.getYaw() + 90);
+        return rightLoc.getDirection();
     }
 
     public static List<Block> getBlocksInArea(Location loc1, Location loc2) {

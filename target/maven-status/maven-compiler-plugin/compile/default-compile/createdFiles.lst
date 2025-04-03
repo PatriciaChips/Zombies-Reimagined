@@ -15,6 +15,7 @@ org\pat\zombiesReimagined\Utility\ItemUtils\Guns.class
 org\pat\zombiesReimagined\Utility\ZUtils.class
 org\pat\zombiesReimagined\Commands\Test$4.class
 org\pat\zombiesReimagined\Commands\Z.class
+org\pat\zombiesReimagined\Utility\MapUtils\DoorType.class
 org\pat\zombiesReimagined\Zombies$1.class
 org\pat\zombiesReimagined\Utility\MapUtils\StructUtils\InteractStructure$4.class
 org\pat\zombiesReimagined\Utility\MapUtils\MapFeature.class

@@ -25,6 +25,7 @@ import org.pat.zombiesReimagined.Commands.Test;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Guns;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
 import org.pat.zombiesReimagined.Utility.ItemUtils.UseType;
+import org.pat.zombiesReimagined.Utility.MapUtils.DoorType;
 import org.pat.zombiesReimagined.Utility.MapUtils.IdentifiedStructures;
 import org.pat.zombiesReimagined.Utility.MapUtils.MapFeature;
 import org.pat.zombiesReimagined.Utility.ZUtils;
@@ -97,13 +98,21 @@ public class InteractStructure {
                                     int i = 23;
                                     float division = 4; //iteration points for rotating doors (MAX 20)
                                     float yAddon = -4;
-                                    boolean isRotatingDoor = loc.clone().getBlock().getType() == Material.BEDROCK;
+                                    boolean isRotatingDoor = feature.getDoorType() == DoorType.doubleRotate3x3
+                                            || feature.getDoorType() == DoorType.doubleRotate4x4
+                                            || feature.getDoorType() == DoorType.upRotate5x4;
+                                    boolean isUpRotation = feature.getDoorType() == DoorType.upRotate5x4;
                                     int groupIteration = 1;
                                     for (Block[] group : sortBlocksByY(feature.getExtraBlocks())) {
                                         int sideCheck = 1;
                                         for (Block structureBlocks : group) {
-                                            if (sideCheck == 5)
-                                                sideCheck = 1;
+                                            if (feature.getDoorType() == DoorType.doubleRotate3x3) {
+                                                if (sideCheck >= 4)
+                                                    sideCheck = 1;
+                                            } else {
+                                                if (sideCheck >= 5)
+                                                    sideCheck = 1;
+                                            }
 
                                             if (groupIteration == 4) {
                                                 if (sideCheck == 1)
@@ -129,16 +138,23 @@ public class InteractStructure {
                                             }, 60);
                                             //*/
 
-                                            p.sendMessage(loc.getYaw() + "");
-
                                             if (isRotatingDoor) {
                                                 if (feature.isTwoBlockCenter()) {
                                                     bLoc.setX(loc.getX());
                                                     bLoc.setZ(loc.getZ());
                                                     if (sideCheck == 1 || sideCheck == 2) {
-                                                        bLoc.add(rightLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -2:2));
+                                                        bLoc.add(rightLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -2 : 2));
                                                     } else if (sideCheck == 3 || sideCheck == 4) {
-                                                        bLoc.add(leftLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -2:2));
+                                                        bLoc.add(leftLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -2 : 2));
+                                                    }
+                                                    bLoc.add(xAddon, 0, zAddon);
+                                                } else if (feature.getDoorType() == DoorType.doubleRotate3x3) {
+                                                    bLoc.setX(loc.getX());
+                                                    bLoc.setZ(loc.getZ());
+                                                    if (sideCheck == 1 || sideCheck == 2) {
+                                                        bLoc.add(rightLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -1.5 : 1.5));
+                                                    } else if (sideCheck == 3) {
+                                                        bLoc.add(leftLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -1.5 : 1.5));
                                                     }
                                                     bLoc.add(xAddon, 0, zAddon);
                                                 } else {
@@ -147,29 +163,63 @@ public class InteractStructure {
                                                 }
                                             }
 
+                                            if (feature.getDoorType() == DoorType.doubleRotate3x3)
+                                                if (sideCheck == 3)
+                                                    sideCheck = 4;
+
                                             BlockDisplay blockDisplay = bLoc.getWorld().spawn(bLoc, BlockDisplay.class);
                                             feature.setStructureEntities(blockDisplay);
                                             //blockDisplay.setBrightness(new Display.Brightness(9, 9));
                                             blockDisplay.setInterpolationDuration((isRotatingDoor) ? 20 / (int) division : 20); //20
                                             blockDisplay.setInterpolationDelay(-1);
                                             blockDisplay.setBlock(data);
+
+                                            Location tbloc = bLoc.clone().add(loc.getYaw() == 180 || loc.getYaw() == 0 ? 3:0, 0, loc.getYaw() == 90 || loc.getYaw() == 270 ? 3:0); //.add(leftLoc.getDirection().normalize().multiply((loc.getYaw() == 270 || loc.getYaw() == 180) ? -3 : 3)
+
+                                            BlockDisplay centerBlockDisplay = bLoc.getWorld().spawn(tbloc, BlockDisplay.class);
+                                            centerBlockDisplay.setInterpolationDuration(blockDisplay.getInterpolationDuration()); //20
+                                            centerBlockDisplay.setInterpolationDelay(blockDisplay.getInterpolationDelay());
+                                            centerBlockDisplay.setBlock(blockDisplay.getBlock());
+
+                                            if (feature.getDoorType() != DoorType.doubleRotate3x3) {
+                                                centerBlockDisplay.remove();
+                                            } else {
+                                                if (sideCheck != 2) {
+                                                    centerBlockDisplay.remove();
+                                                } else {
+                                                    feature.setStructureEntities(centerBlockDisplay);
+                                                }
+                                            }
+
                                             Matrix4f tinitialMatrix = new Matrix4f().translateLocal(-0.5F, yAddon, -0.5F);
+                                            Matrix4f tinitialCMatrix = null;
                                             if (isRotatingDoor && !feature.isTwoBlockCenter())
                                                 blockDisplay.setTransformationMatrix(tinitialMatrix);
-                                            if (feature.isTwoBlockCenter() && isRotatingDoor) {
-                                                tinitialMatrix = new Matrix4f().translateLocal(0, 0, -0.5F);
+                                            if (isRotatingDoor) {
+                                                tinitialMatrix = new Matrix4f().translateLocal(0, 0, -0.5F).scaleLocal(0.5F, 1, 1);
                                                 switch ((int) loc.getYaw()) {
                                                     case 90, 270:
-                                                        tinitialMatrix = new Matrix4f().translateLocal((e.getBlockFace() == BlockFace.EAST) ? -1:0, 0, ((sideCheck == 1) ? 0 : sideCheck == 2 ? 1 : sideCheck == 3 ? -2 : sideCheck == 4 ? -1 : 0));
+                                                        tinitialMatrix = new Matrix4f().scaleLocal(0.5F, 1, (feature.getDoorType() == DoorType.doubleRotate3x3 && sideCheck == 2) ? 0.5F : 1).translateLocal(e.getBlockFace() == BlockFace.EAST ? txAddon : 0, 0, 0).translateLocal((e.getBlockFace() == BlockFace.EAST) ? -1 : 0, 0, ((sideCheck == 1) ? 0 : sideCheck == 2 ? 1 : sideCheck == 3 ? -2 : sideCheck == 4 ? -1 : 0));
                                                         break;
                                                     case 0, 180:
-                                                        tinitialMatrix = new Matrix4f().translateLocal(((sideCheck == 1) ? 0 : sideCheck == 2 ? 1 : sideCheck == 3 ? -2 : sideCheck == 4 ? -1 : 0), 0, (e.getBlockFace() == BlockFace.SOUTH) ? -1:0);
+                                                        tinitialMatrix = new Matrix4f().scaleLocal((feature.getDoorType() == DoorType.doubleRotate3x3 && sideCheck == 2) ? 0.5F : 1, 1, 0.5F).translateLocal(0, 0, e.getBlockFace() == BlockFace.SOUTH ? tzAddon : 0).translateLocal(((sideCheck == 1) ? 0 : sideCheck == 2 ? 1 : sideCheck == 3 ? -2 : sideCheck == 4 ? -1 : 0), 0, (e.getBlockFace() == BlockFace.SOUTH) ? -1 : 0);
                                                         break;
                                                 }
                                                 blockDisplay.setTransformationMatrix(tinitialMatrix);
+                                                if (feature.getDoorType() == DoorType.doubleRotate3x3 && sideCheck == 2) {
+                                                    try {
+                                                        float xCA = loc.getYaw() == 180 ? -3F:(loc.getYaw() == 0) ? -3F:0;
+                                                        float zCa = loc.getYaw() == 270 ? -3F:(loc.getYaw() == 90) ? -3F:0;
+                                                        tinitialCMatrix = ((Matrix4f) tinitialMatrix.clone()).translateLocal((loc.getYaw() == 90 || loc.getYaw() == 270 ? 0 : 0.5F) + xCA, 0, (loc.getYaw() == 0 || loc.getYaw() == 180 ? 0 : 0.5F) + zCa);
+                                                        centerBlockDisplay.setTransformationMatrix(tinitialCMatrix);
+                                                    } catch (CloneNotSupportedException ex) {
+                                                        throw new RuntimeException(ex);
+                                                    }
+                                                }
                                             }
 
                                             final Matrix4f initialMatrix = tinitialMatrix;
+                                            final Matrix4f initialCMatrix = tinitialCMatrix;
 
                                             Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
                                                 structureBlocks.setType(Material.AIR);
@@ -180,14 +230,24 @@ public class InteractStructure {
                                                 if (isRotatingDoor) {
                                                     new BukkitRunnable() {
                                                         Matrix4f tMat = initialMatrix;
+                                                        Matrix4f tCMat = initialCMatrix;
                                                         int iterations = 0;
+
                                                         public void run() {
                                                             blockDisplay.setInterpolationDelay(-1);
                                                             blockDisplay.setInterpolationDuration(20 / (int) division);
-                                                            if (feature.isTwoBlockCenter()) {
-                                                                Matrix4f matrix4f = new Matrix4f().rotateY((float) Math.toRadians(-75 * directionInt / division * ((fSideCheck == 1 || fSideCheck == 2) ? 1:-1))).mul(tMat);
+                                                            if (feature.isTwoBlockCenter() || feature.getDoorType() == DoorType.doubleRotate3x3) {
+                                                                float rotation = -75 * directionInt / division * ((fSideCheck == 1 || fSideCheck == 2) ? 1 : -1);
+                                                                Matrix4f matrix4f = new Matrix4f().rotateY((float) Math.toRadians(rotation)).mul(tMat);
                                                                 tMat = matrix4f;
                                                                 blockDisplay.setTransformationMatrix(matrix4f);
+                                                                if (feature.getDoorType() == DoorType.doubleRotate3x3 && fSideCheck == 2) {
+                                                                    centerBlockDisplay.setInterpolationDelay(-1);
+                                                                    centerBlockDisplay.setInterpolationDuration(20 / (int) division);
+                                                                    Matrix4f matrix4fC = new Matrix4f().rotateY((float) Math.toRadians(rotation * -1)).mul(tCMat);
+                                                                    tCMat = matrix4fC;
+                                                                    centerBlockDisplay.setTransformationMatrix(matrix4fC);
+                                                                }
                                                             } else {
                                                                 Matrix4f matrix4f = new Matrix4f().rotateZ((float) Math.toRadians((isWestSouth) ? -90 * directionInt / division : 0)).rotateX((float) Math.toRadians((!isWestSouth) ? -90 * directionInt / division : 0)).mul(tMat);
                                                                 tMat = matrix4f;
@@ -197,7 +257,7 @@ public class InteractStructure {
                                                             if (iterations == division)
                                                                 cancel();
                                                         }
-                                                    }.runTaskTimer(ZUtils.plugin, 0L, 20 / (int) division);
+                                                    }.runTaskTimer(ZUtils.plugin, 0L, (20 / (int) division));
                                                 } else {
                                                     blockDisplay.setTransformationMatrix(new Matrix4f().translate(0, 4.01F, 0));
                                                 }
