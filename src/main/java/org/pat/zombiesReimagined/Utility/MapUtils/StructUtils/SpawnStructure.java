@@ -1,10 +1,7 @@
 package org.pat.zombiesReimagined.Utility.MapUtils.StructUtils;
 
 import net.minecraft.util.Brightness;
-import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Tag;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.FaceAttachable;
@@ -17,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.joml.Matrix4f;
 import org.pat.pattyEssentialsV3.ColoredText;
+import org.pat.zombiesReimagined.Utility.ItemUtils.Dev;
 import org.pat.zombiesReimagined.Utility.ItemUtils.Item;
 import org.pat.zombiesReimagined.Utility.ItemUtils.UseType;
 import org.pat.zombiesReimagined.Utility.MapUtils.DoorType;
@@ -27,6 +25,7 @@ import org.pat.zombiesReimagined.Utility.ZUtils;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class SpawnStructure {
 
@@ -39,7 +38,7 @@ public class SpawnStructure {
 
             switch (feature.getType()) {
                 case UNLOCK_DOOR: {
-                    loc.add(0, 3.3 - ((feature.getDoorType() == DoorType.doubleRotate3x3) ? 0.9F:0), 0);
+                    loc.add(0, 3.3 - ((feature.getDoorType() == DoorType.doubleRotate3x3) ? 0.9F : 0), 0);
 
                     float adjustTextSize = 0;
 
@@ -456,17 +455,17 @@ public class SpawnStructure {
                     nameBackboardStandChainleft.setBlock(Material.CHAIN.createBlockData());
                     nameBackboardStandChainleft.setTransformationMatrix(new Matrix4f()
                             .scale(0.8F)
-                            .translate((isClear) ? 0.1F: 0.05F, (isClear) ? -0.3F:-0.3F, (isClear) ? -0.25F:0.02F)
-                            .rotateLocalX((float) Math.toRadians((isClear) ? 18:45))
-                            .rotateLocalZ((float) Math.toRadians((isClear) ? -15L:13)));
+                            .translate((isClear) ? 0.1F : 0.05F, (isClear) ? -0.3F : -0.3F, (isClear) ? -0.25F : 0.02F)
+                            .rotateLocalX((float) Math.toRadians((isClear) ? 18 : 45))
+                            .rotateLocalZ((float) Math.toRadians((isClear) ? -15L : 13)));
 
                     BlockDisplay nameBackboardStandChainright = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
                     nameBackboardStandChainright.setBlock(Material.CHAIN.createBlockData());
                     nameBackboardStandChainright.setTransformationMatrix(new Matrix4f()
                             .scale(0.8F)
-                            .translate((isClear) ? -1.1F: -1.05F, (isClear) ? -0.3F:-0.3F, (isClear) ? -0.25F:0.02F)
-                            .rotateLocalX((float) Math.toRadians((isClear) ? 18:45))
-                            .rotateLocalZ((float) Math.toRadians((isClear) ? 15:-13)));
+                            .translate((isClear) ? -1.1F : -1.05F, (isClear) ? -0.3F : -0.3F, (isClear) ? -0.25F : 0.02F)
+                            .rotateLocalX((float) Math.toRadians((isClear) ? 18 : 45))
+                            .rotateLocalZ((float) Math.toRadians((isClear) ? 15 : -13)));
 
                     BlockDisplay hangingSign = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
                     hangingSign.setBlock(Material.STRIPPED_OAK_WOOD.createBlockData());
@@ -489,7 +488,7 @@ public class SpawnStructure {
                             .translate(-0.021F, -0.44375F, -0.725F)
                             .rotateLocalX((float) Math.toRadians(-4)));
 
-                    loc.add(0, (isClear) ? 2.4:1.4, 0);
+                    loc.add(0, (isClear) ? 2.4 : 1.4, 0);
 
                     BlockDisplay lanternOn = p.getWorld().spawn(loc.clone().add(loc.getDirection()), BlockDisplay.class);
                     Lantern lanternOnData = (Lantern) Material.LANTERN.createBlockData();
@@ -523,6 +522,10 @@ public class SpawnStructure {
                     feature.statusVisibilitySwap(false);
                 }
                 break;
+                case RUBBLE: {
+                    createRubble(feature, loc);
+                }
+                break;
             }
         }
     }
@@ -543,6 +546,137 @@ public class SpawnStructure {
 
     public static Vector blockFaceToVector(BlockFace face) {
         return blockFaceToVector(face, null);
+    }
+
+    public static Object[] getRandomRubble(Material baseMat) {
+        List<Material> blockSet = new ArrayList<>(List.of(
+                Material.OAK_FENCE,
+                Material.OAK_FENCE_GATE,
+                Material.OAK_PLANKS,
+                Material.OAK_DOOR,
+                Material.OAK_TRAPDOOR,
+                Material.OAK_BUTTON,
+                Material.STICK
+        ));
+
+        Random ran = new Random();
+
+        Material chosenMat = null;
+
+        while (chosenMat == null) {
+            Material tMat = blockSet.get(ran.nextInt(blockSet.size()));
+            switch (tMat) {
+                case OAK_DOOR:
+                    if (ran.nextInt(25) == 1)
+                        chosenMat = tMat;
+                    break;
+                case OAK_TRAPDOOR:
+                    if (ran.nextInt(12) == 1)
+                        chosenMat = tMat;
+                    break;
+                case OAK_FENCE:
+                    if (ran.nextInt(4) == 1)
+                        chosenMat = tMat;
+                    break;
+                case OAK_FENCE_GATE:
+                    if (ran.nextInt(8) == 1)
+                        chosenMat = tMat;
+                    break;
+                default:
+                    chosenMat = tMat;
+            }
+        }
+
+        Matrix4f returningMatrix = null;
+
+        switch (chosenMat) {
+            case OAK_DOOR:
+                returningMatrix = new Matrix4f()
+                        .scale(1.5F + ((float) ran.nextInt(8) / 10F))
+                        .translate(0, 0, 0)
+                        .rotateLocalX((float) Math.toRadians(ran.nextInt(4)))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(4)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+                break;
+            case OAK_FENCE:
+                returningMatrix = new Matrix4f()
+                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .translate(0, 0, -0.5F)
+                        .rotateLocalX((float) Math.toRadians(ran.nextInt(12)))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(12)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+                break;
+            case OAK_FENCE_GATE:
+                returningMatrix = new Matrix4f()
+                        .scale(0.4F + ((float) ran.nextInt(8) / 10F))
+                        .translate(0, 0, -0.55F)
+                        .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+                break;
+            case OAK_PLANKS:
+                returningMatrix = new Matrix4f()
+                        .scale(0.2F + ((float) ran.nextInt(3) / 10F), 0.2F + ((float) ran.nextInt(12) / 10F), 0.2F)
+                        .translate(0, 0, -0.2F)
+                        .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+                break;
+            case OAK_TRAPDOOR:
+                returningMatrix = new Matrix4f()
+                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .translate(0, 0, -0.4F)
+                        .rotateLocalX((float) Math.toRadians(90))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+                break;
+            case OAK_BUTTON:
+                returningMatrix = new Matrix4f()
+                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .translate(0, 0, -1F)
+                        .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+                break;
+            default:
+                returningMatrix = new Matrix4f()
+                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .translate(0, 0, -0.1F)
+                        .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
+                        .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
+                        .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
+        }
+
+        if (chosenMat.toString().contains("OAK")) {
+            chosenMat = Material.getMaterial(chosenMat.toString().replace("OAK", baseMat.toString().replace("_SIGN", "")));
+        }
+
+        return new Object[]{chosenMat, returningMatrix};
+    }
+
+    public static void createRubble(MapFeature feature, Location location) {
+        Location loc = location.getBlock().getLocation();
+        loc.setDirection(new Vector(0, -1, 0));
+
+        Random ran = new Random();
+
+        for (int i = 1; i <= feature.getDensity(); i++) {
+            Object[] obArray = getRandomRubble(feature.getMaterial());
+            Material mat = (Material) obArray[0];
+            Matrix4f matrix = (Matrix4f) obArray[1];
+            Location ranLoc = loc.clone().add((double) ran.nextInt(100) / (double) 100, 0, (double) ran.nextInt(100) / (double) 100);
+            if (mat == Material.STICK || mat.toString().contains("_DOOR")) {
+                ItemDisplay rubbleItemEntity = loc.getWorld().spawn(ranLoc, ItemDisplay.class);
+                rubbleItemEntity.setItemStack(new ItemStack(mat));
+                rubbleItemEntity.setTransformationMatrix(matrix);
+                feature.setStructureEntities(rubbleItemEntity);
+            } else {
+                BlockDisplay rubbleEntity = loc.getWorld().spawn(ranLoc, BlockDisplay.class);
+                rubbleEntity.setBlock(mat.createBlockData());
+                rubbleEntity.setTransformationMatrix(matrix);
+                feature.setStructureEntities(rubbleEntity);
+            }
+        }
     }
 
     public static Vector blockFaceToVector(BlockFace face, @Nullable FaceAttachable.AttachedFace attachedFace) {

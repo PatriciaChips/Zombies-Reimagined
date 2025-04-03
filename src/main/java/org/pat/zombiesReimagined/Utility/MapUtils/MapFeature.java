@@ -41,6 +41,7 @@ public class MapFeature implements Cloneable {
     private Location loc;
     private boolean isTwoBlockCenter;
     private DoorType doorType;
+    private int density;
 
     // Constructor for GUN shop
     public MapFeature(FeatureType gun, int gunCost, int ammoCost, String key) {
@@ -114,6 +115,14 @@ public class MapFeature implements Cloneable {
         this.extraBlocks = new ArrayList<>();
         this.structureEntities = new ArrayList<>();
         this.isTwoBlockCenter = false;
+    }
+
+    // Constructor for RUBBLE
+    public MapFeature(FeatureType rubble, int density, Material baseType) {
+        this.type = rubble;
+        this.material = baseType;
+        this.density = density;
+        this.structureEntities = new ArrayList<>();
     }
 
     public MapFeature clone() {
@@ -211,6 +220,10 @@ public class MapFeature implements Cloneable {
 
     public DoorType getDoorType() {
         return doorType;
+    }
+
+    public int getDensity() {
+        return density;
     }
 
     /**

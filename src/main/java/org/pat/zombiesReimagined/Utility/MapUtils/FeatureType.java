@@ -7,5 +7,7 @@ public enum FeatureType {
     ARMOR,
     CHEST,
     WINDOW,
-    UNLOCK_DOOR
+    UNLOCK_DOOR,
+    RUBBLE,
+    BLOCK_RUBBLE
 }

@@ -1,9 +1,12 @@
 package org.pat.zombiesReimagined.Utility.ItemUtils;
 
+import ca.spottedleaf.dataconverter.types.MapType;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Slab;
+import org.bukkit.block.sign.Side;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -87,7 +90,7 @@ public class Dev {
                                                                 List<Block> extraBlocks = new ArrayList<>();
                                                                 for (BlockFace face1 : new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST}) {
                                                                     if (centerLoc.getBlock().getRelative(face1).getType() == Material.BEDROCK) {
-                                                                        extraBlocks.addAll(getBlocksInArea(centerLoc.clone().add(getLeftVec(centerLoc).normalize().multiply(1)).add(0, 0, 0), centerLoc.clone().add(getRightVec(centerLoc).normalize().multiply(2)).add(0, 2, 0).add((centerLoc.getYaw() == 180F) ? centerLoc.getDirection().normalize().multiply(-1):new Vector())));
+                                                                        extraBlocks.addAll(getBlocksInArea(centerLoc.clone().add(getLeftVec(centerLoc).normalize().multiply(1)).add(0, 0, 0), centerLoc.clone().add(getRightVec(centerLoc).normalize().multiply(2)).add(0, 2, 0).add((centerLoc.getYaw() == 180F) ? centerLoc.getDirection().normalize().multiply(-1) : new Vector())));
                                                                         extraBlocks.add(centerLoc.clone().add(0, 3, 0).getBlock());
                                                                         extraBlocks.add(centerLoc.clone().add(0, 3, 0).add(getRightVec(centerLoc).normalize()).getBlock());
                                                                         mapFeature.setExtraBlocks(extraBlocks);
@@ -258,6 +261,15 @@ public class Dev {
                                                     }
                                                 }
                                             }
+                                        }
+                                    } else if (Tag.SIGNS.isTagged(loc.getBlock().getType())) {
+                                        Sign sign = (Sign) loc.getBlock().getState();
+                                        boolean isValidRubbleSign = sign.getSide(Side.BACK).getLine(1).toLowerCase().contains("#") || sign.getSide(Side.FRONT).getLine(1).toLowerCase().contains("#");
+                                        if (isValidRubbleSign) {
+                                            try {
+                                                MapFeature feature = new MapFeature(FeatureType.RUBBLE, sign.getSide(Side.BACK).getLine(0).length() > 0 ? Integer.valueOf(sign.getSide(Side.BACK).getLine(0)) : Integer.valueOf(sign.getSide(Side.FRONT).getLine(0)), loc.getBlock().getType());
+                                                MapFeature.storedStructures.put(feature, loc.clone().add(0, 2, 0));
+                                            } catch (NumberFormatException as) { }
                                         }
                                     }
                                 }
