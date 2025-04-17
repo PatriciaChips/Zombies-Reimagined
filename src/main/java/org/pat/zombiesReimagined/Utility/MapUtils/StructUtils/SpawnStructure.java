@@ -548,7 +548,7 @@ public class SpawnStructure {
         return blockFaceToVector(face, null);
     }
 
-    public static Object[] getRandomRubble(Material baseMat) {
+    public static Object[] getRandomRubble(Material baseMat, int density) {
         List<Material> blockSet = new ArrayList<>(List.of(
                 Material.OAK_FENCE,
                 Material.OAK_FENCE_GATE,
@@ -587,6 +587,13 @@ public class SpawnStructure {
             }
         }
 
+        float densitySizeAdjustment = 3 - density;
+
+        if (densitySizeAdjustment < 0)
+            densitySizeAdjustment = 0;
+
+        densitySizeAdjustment = densitySizeAdjustment / 10F;
+
         Matrix4f returningMatrix = null;
 
         switch (chosenMat) {
@@ -600,7 +607,7 @@ public class SpawnStructure {
                 break;
             case OAK_FENCE:
                 returningMatrix = new Matrix4f()
-                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .scale(0.2F + ((float) ran.nextInt(8) / 10F) - densitySizeAdjustment/4)
                         .translate(0, 0, -0.5F)
                         .rotateLocalX((float) Math.toRadians(ran.nextInt(12)))
                         .rotateLocalY((float) Math.toRadians(ran.nextInt(12)))
@@ -608,7 +615,7 @@ public class SpawnStructure {
                 break;
             case OAK_FENCE_GATE:
                 returningMatrix = new Matrix4f()
-                        .scale(0.4F + ((float) ran.nextInt(8) / 10F))
+                        .scale(0.4F + ((float) ran.nextInt(8) / 10F) - densitySizeAdjustment/3)
                         .translate(0, 0, -0.55F)
                         .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
                         .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
@@ -616,23 +623,23 @@ public class SpawnStructure {
                 break;
             case OAK_PLANKS:
                 returningMatrix = new Matrix4f()
-                        .scale(0.2F + ((float) ran.nextInt(3) / 10F), 0.2F + ((float) ran.nextInt(12) / 10F), 0.2F)
-                        .translate(0, 0, -0.2F)
+                        .scale(0.2F + ((float) ran.nextInt(6) / 10F) - (densitySizeAdjustment/4), 0.5F + ((float) ran.nextInt(13) / 10F) - (densitySizeAdjustment/1.5F), 0.2F)
+                        .translate(0, 0, -0.5F)
                         .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
                         .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
                         .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
                 break;
             case OAK_TRAPDOOR:
                 returningMatrix = new Matrix4f()
-                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
-                        .translate(0, 0, -0.4F)
-                        .rotateLocalX((float) Math.toRadians(90))
+                        .scale(0.5F + ((float) ran.nextInt(9) / 10F) - densitySizeAdjustment)
+                        .translateLocal(0, -0.13F, 0)
+                        .rotateLocalX((float) Math.toRadians(85 + ran.nextInt(11)))
                         .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
                         .rotateLocalZ((float) Math.toRadians(ran.nextInt(361)));
                 break;
             case OAK_BUTTON:
                 returningMatrix = new Matrix4f()
-                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .scale(0.4F + ((float) ran.nextInt(8) / 10F) - densitySizeAdjustment)
                         .translate(0, 0, -1F)
                         .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
                         .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
@@ -640,7 +647,7 @@ public class SpawnStructure {
                 break;
             default:
                 returningMatrix = new Matrix4f()
-                        .scale(0.2F + ((float) ran.nextInt(8) / 10F))
+                        .scale(0.2F + ((float) ran.nextInt(8) / 10F) - (densitySizeAdjustment/3))
                         .translate(0, 0, -0.1F)
                         .rotateLocalX((float) Math.toRadians(ran.nextInt(8)))
                         .rotateLocalY((float) Math.toRadians(ran.nextInt(7)))
@@ -661,7 +668,7 @@ public class SpawnStructure {
         Random ran = new Random();
 
         for (int i = 1; i <= feature.getDensity(); i++) {
-            Object[] obArray = getRandomRubble(feature.getMaterial());
+            Object[] obArray = getRandomRubble(feature.getMaterial(), feature.getDensity());
             Material mat = (Material) obArray[0];
             Matrix4f matrix = (Matrix4f) obArray[1];
             Location ranLoc = loc.clone().add((double) ran.nextInt(100) / (double) 100, 0, (double) ran.nextInt(100) / (double) 100);

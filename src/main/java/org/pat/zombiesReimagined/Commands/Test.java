@@ -7,8 +7,11 @@ import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.type.HangingSign;
 import org.bukkit.block.data.type.Light;
+import org.bukkit.block.data.type.Slab;
+import org.bukkit.block.data.type.Stairs;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -53,6 +56,9 @@ public class Test implements TabExecutor {
 
     public static List<Entity> bulletHoles = new ArrayList<>();
     public static int maxEntities = 200 * 2; //200
+
+    public static List<Entity> bloodSplatter = new ArrayList<>();
+    public static int maxBloodEntities = 200 * 2; //200
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String cmd, @NotNull String[] args) {
@@ -314,14 +320,19 @@ public class Test implements TabExecutor {
         if (doReturn)
             return true;
 
-        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
+        Location[] variables1 = createWeaponLocation(p, bloom, false, gun.getRange());
+
+        Location loc = variables1[0];
         Vector dir = loc.getDirection();
 
         loc.getWorld().spawnParticle(Particle.DUST, loc, 3, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(140, 240, 70), 0.8F));
 
-        Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0);
+        Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0, true);
         float distance = (variables.length > 0 ? (float) variables[0] : gun.getRange());
         Location hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
+
+        //float distance = (float) variables[0].distance(variables[1]);
+        //Location hitLocation = variables[1];
 
         if (MapFeature.isMaterialSafe(hitLocation.getBlock().getType()) && variables.length < 3)
             hitLocation = null;
@@ -459,7 +470,7 @@ public class Test implements TabExecutor {
         if (doReturn)
             return true;
 
-        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
+        Location loc = createWeaponLocation(p, bloom, false, gun.getRange())[0];
 
         if (pitchCheck) {
             if (p.getPitch() >= 80 || p.getPitch() <= -80)
@@ -485,6 +496,7 @@ public class Test implements TabExecutor {
         new BukkitRunnable() {
             int i = 0;
             Location prevLoc = null;
+
             public void run() {
 
                 adjustedLoc.getWorld().playSound(adjustedLoc, Sound.BLOCK_SAND_BREAK, 0.1F, 0.5F);
@@ -493,7 +505,7 @@ public class Test implements TabExecutor {
                 if (dir.length() <= 0.2 && !MapFeature.isMaterialSafe(adjustedLoc.clone().add(0, -0.1, 0).getBlock().getType())) {
 
                 } else {
-                    Object[] variables1 = getLookingAtBlockSpot(adjustedLoc.clone(), p, (float) dir.length(), 0.01F);
+                    Object[] variables1 = getLookingAtBlockSpot(adjustedLoc.clone(), p, (float) dir.length(), 0.01F, true);
                     float distance = (float) variables1[0];
                     Location hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
@@ -638,10 +650,21 @@ public class Test implements TabExecutor {
     }
 
     public static void createSpark(Location location, Vector dir, float bloom, float scale, int amount, int duration, float length, int lengthAmount, Material trail) {
-        createSpark(location, dir, bloom, scale, amount, duration, length, lengthAmount, trail, null);
+        createSpark(location, dir, bloom, scale, amount, duration, length, lengthAmount, trail, null, 0.008F, null, false, false);
     }
 
-    public static void createSpark(Location location, Vector dir, float bloom, float scale, int amount, int duration, float length, int lengthAmount, Material trail, @Nullable Player p) {
+    public static void createSpark(Location location, Vector dir, float bloom, float scale, int amount, int duration, float length, int lengthAmount, Material trail
+            , float customGrav, Material splatMaterial, boolean isInstantIteration, boolean willOverIterate) {
+        createSpark(location, dir, bloom, scale, amount, duration, length, lengthAmount, trail, null, customGrav, splatMaterial, isInstantIteration, willOverIterate);
+    }
+
+    public static void createSpark(Location location, Vector dir, float bloom, float scale, int amount, int duration, float length, int lengthAmount, Material trail
+            , Player p, float customGrav, Material splatMaterial, boolean isInstantIteration, boolean willOverIterate) {
+
+        int lengthAmount1 = lengthAmount;
+
+        if (willOverIterate)
+            lengthAmount1 = lengthAmount + 15;
 
         for (int a = 1; a <= amount; a++) {
             Location loc = location.clone();
@@ -649,16 +672,82 @@ public class Test implements TabExecutor {
             loc.setDirection(dir);
             setBloom(loc, bloom);
 
-            for (int l = 1; l <= lengthAmount; l++) {
+            for (int l = 1; l <= lengthAmount1; l++) {
                 Location tLoc = loc.clone();
-                Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
-                    createTrail(tLoc, false, trail, scale, duration, (float) loc.getDirection().normalize().multiply(length).length(), p);
-                }, l);
+                if (l <= lengthAmount) {
+                    if (isInstantIteration) {
+                        createTrail(tLoc, false, trail, scale, duration, (float) loc.getDirection().normalize().multiply(length).length(), p);
+                    } else {
+                        Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                            createTrail(tLoc, false, trail, scale, duration, (float) loc.getDirection().normalize().multiply(length).length(), p);
+                        }, l);
+                    }
+                }
+
+                Material inBlockMaterial = loc.getBlock().getType();
+                Location perLoc = loc.clone();
+
                 Vector vec = loc.getDirection();
-                vec.setY(vec.getY() - 0.008);
+                vec.setY(vec.getY() - (customGrav * ((l > lengthAmount) ? 2:1)));
                 vec.normalize().multiply(length);
                 loc.setDirection(vec);
                 loc.add(vec);
+
+                Material inBlockFutureMaterial = loc.getBlock().getType();
+
+                if (!MapFeature.isMaterialSafe(inBlockFutureMaterial)) {
+                    if (MapFeature.isMaterialSafe(inBlockMaterial)) {
+
+                        Object[] variables = getLookingAtBlockSpot(perLoc, p, 1, 0, false);
+                        Location hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
+
+                        if (!MapFeature.isMaterialSafe(hitLocation.getBlock().getType())) {
+                            Vector holeVec = createHoleVector(hitLocation);
+
+                            holeVec = holeVec.multiply(0.01);
+
+                            Location holeLocation = hitLocation.clone().add(holeVec);
+                            holeLocation.setDirection(holeVec);
+
+                            float scaleB = 0.2F + ((float) new Random().nextInt(30)) / 100F;
+                            float ranRot = (float) Math.toRadians(new Random().nextInt(91));
+
+                            BlockDisplay blockDisplay = perLoc.getWorld().spawn(holeLocation, BlockDisplay.class);
+                            blockDisplay.setBlock(splatMaterial.createBlockData());
+                            blockDisplay.setTransformationMatrix(new Matrix4f()
+                                    .scale(scaleB, scaleB, 0.02F)
+                                    .translate(-0.5F, -0.5F, 0)
+                                    .rotateLocalZ(ranRot));
+
+                            BlockDisplay blockDisplay1 = perLoc.getWorld().spawn(holeLocation, BlockDisplay.class);
+                            blockDisplay1.setBlock(Material.REDSTONE_BLOCK.createBlockData());
+                            blockDisplay1.setTransformationMatrix(new Matrix4f()
+                                    .scale(scaleB - 0.1F, scaleB - 0.1F, 0.018F)
+                                    .translate(-0.5F, -0.5F, 0)
+                                    .rotateLocalZ(ranRot));
+
+                            if (bloodSplatter.size() + 2 > maxBloodEntities) {
+                                bloodSplatter.get(0).remove();
+                                bloodSplatter.get(1).remove();
+                                bloodSplatter.remove(0);
+                                bloodSplatter.remove(1);
+                            }
+
+                            bloodSplatter.add(blockDisplay);
+                            bloodSplatter.add(blockDisplay1);
+
+                            Utils.scheduler.runTaskLater(ZUtils.plugin, () -> {
+                                blockDisplay.remove();
+                                blockDisplay1.remove();
+                                if (bloodSplatter.contains(blockDisplay))
+                                    bloodSplatter.remove(blockDisplay);
+                                if (bloodSplatter.contains(blockDisplay1))
+                                    bloodSplatter.remove(blockDisplay1);
+                            }, 120);
+                        }
+                    }
+                    break;
+                }
             }
         }
 
@@ -909,6 +998,8 @@ public class Test implements TabExecutor {
 
     public static boolean shootGunTest1(Player p, ItemStack item, boolean useBullet, boolean showMuzzle, boolean initialShot) {
 
+        // RECOIL TEST p.setRotation(p.getEyeLocation().getYaw()-1 + new Random().nextInt(3), p.getEyeLocation().getPitch()-0.5F-((float)new Random().nextInt(21)/10F));
+
         Item gun = Item.getItem(item);
         float bloom = gun.getBloom();
 
@@ -932,9 +1023,11 @@ public class Test implements TabExecutor {
 
         //Location flashLoc = p.getEyeLocation().clone().add(gunLoc1.getDirection().multiply(0.212)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply((rightHand) ? 0.465 : -0.465)); //.add(gunLoc1.getDirection().multiply(0.26) //.add(gunLoc1.getDirection().multiply(0.26)).add(p.getEyeLocation().getDirection().multiply(0.95)).add(gunLoc.getDirection().multiply(0.6).add(rotatedVec.multiply(0.2)
 
-        Location flashLoc = createWeaponLocation(p, 0, true, 0);
+        Location flashLoc = createWeaponLocation(p, 0, true, 0)[0];
 
-        Location loc = createWeaponLocation(p, bloom, false, gun.getRange());
+        Location[] variables1 = createWeaponLocation(p, bloom, false, gun.getRange());
+
+        Location loc = variables1[0];
         Location loc1 = loc.clone();
 
         loc.getWorld().spawnParticle(Particle.SMOKE, loc.clone().add(p.getEyeLocation().getDirection().multiply(0.2)), 1, 0, 0, 0, 0.01);
@@ -970,9 +1063,12 @@ public class Test implements TabExecutor {
             createLightSource(p.getEyeLocation(), 7, 2, 0, 0);
         }
 
-        Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0);
+        Object[] variables = getLookingAtBlockSpot(loc, p, gun.getRange(), 0, true);
         float distance = (variables.length > 0 ? (float) variables[0] : gun.getRange());
         Location hitLocation = (Location) (variables.length > 1 ? variables[1] : null);
+
+        //Location hitLocation = variables[1];
+        //float distance = (float) variables[0].distance(variables[1]);
 
         if (MapFeature.isMaterialSafe(hitLocation.getBlock().getType()) && variables.length < 3)
             hitLocation = null;
@@ -1005,7 +1101,7 @@ public class Test implements TabExecutor {
         float randomValue = 0.05f + (0.09f - 0.05f) * new Random().nextFloat();
         float randomRotation = new Random().nextInt(361);
 
-        createDisplayRings(loc, distance, 1, 0.8F, 0.3F, randomValue + 0.03F, 0, 91, Material.LIGHT_GRAY_STAINED_GLASS, 10, 7 + new Random().nextInt(5), 1, 2);
+        //createDisplayRings(loc, distance, 1, 0.8F, 0.3F, randomValue + 0.03F, 0, 91, Material.LIGHT_GRAY_STAINED_GLASS, 10, 7 + new Random().nextInt(5), 1, 2);
 
         AxisAngle4f angle = new AxisAngle4f(new Random().nextInt(361), 0, 0, 1);
 
@@ -1029,6 +1125,7 @@ public class Test implements TabExecutor {
                 p.getWorld().spawnParticle(Particle.BLOCK, hitLocation, 10, 0.2, 0.2, 0.2, Material.REDSTONE_BLOCK.createBlockData());
                 loc.getWorld().spawnParticle(Particle.DUST_PILLAR, hitLocation, 1, 0.1, 0.1, 0.1, Material.REDSTONE_BLOCK.createBlockData());
             }
+            createSpark(hitLocation, p.getEyeLocation().getDirection(), 50, 0.05F, new Random().nextInt(5), 4, 0.4F, 6, Material.REDSTONE_BLOCK, 0.02F, Material.RED_STAINED_GLASS, true, true);
         }
 
         if (hitLocation != null && variables.length == 2) {
@@ -1054,6 +1151,7 @@ public class Test implements TabExecutor {
             p.getWorld().spawnParticle(Particle.BLOCK, holeLocation, 3, 0.1, 0.1, 0.1, hitLocation.getBlock().getType().createBlockData());
             loc.getWorld().spawnParticle(Particle.DUST_PILLAR, holeLocation, 1, 0.1, 0.1, 0.1, hitLocation.getBlock().getType().createBlockData());
             loc.getWorld().spawnParticle(Particle.FALLING_DUST, holeLocation, 2, 0.2, 0.2, 0.2, hitLocation.getBlock().getType().createBlockData());
+            loc.getWorld().spawnParticle(Particle.CLOUD, holeLocation, 1, 0.1, 0.1, 0.1, 0);
 
             BlockDisplay holedisplay = (BlockDisplay) p.getWorld().spawnEntity(holeLocation, EntityType.BLOCK_DISPLAY);
             BlockDisplay holedisplay1 = (BlockDisplay) p.getWorld().spawnEntity(holeLocation.clone().add(holeVec.clone().multiply(0.99)), EntityType.BLOCK_DISPLAY);
@@ -1068,8 +1166,8 @@ public class Test implements TabExecutor {
             holedisplay1.setViewRange(256);
             holedisplay.setBillboard(Display.Billboard.FIXED);
             holedisplay1.setBillboard(Display.Billboard.FIXED);
-            holedisplay.setBrightness(new Display.Brightness(2, 2));
-            holedisplay1.setBrightness(new Display.Brightness(0, 0));
+            //holedisplay.setBrightness(new Display.Brightness(2, 2));
+            //holedisplay1.setBrightness(new Display.Brightness(0, 0));
             holeDisplayPuff.setBrightness(new Display.Brightness(0, 0));
 
             int randomPuffRotation = new Random().nextInt(91);
@@ -1146,7 +1244,7 @@ public class Test implements TabExecutor {
 
     }
 
-    public static Location createWeaponLocation(Player p, float bloom, boolean isFlash, float searchDistance) {
+    public static Location[] createWeaponLocation(Player p, float bloom, boolean isFlash, float searchDistance) {
         Location gunLoc = p.getEyeLocation().clone();
 
         gunLoc.setPitch(0);
@@ -1168,7 +1266,7 @@ public class Test implements TabExecutor {
 
         Location hitLocation = null;
 
-        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p, searchDistance, 0);
+        Object[] variables1 = getLookingAtBlockSpot(p.getEyeLocation(), p, searchDistance, 0, true);
         hitLocation = (Location) (variables1.length > 1 ? variables1[1] : null);
 
         if (hitLocation != null) { // run check
@@ -1223,14 +1321,14 @@ public class Test implements TabExecutor {
             loc.setDirection(offsetVec);
         }
 
-        return loc;
+        return new Location[]{loc, hitLocation};
     }
 
     private static double getDistanceToFace(Location targetLocation, Location faceLocation) {
         return targetLocation.distance(faceLocation);
     }
 
-    public static Object[] getLookingAtBlockSpot(Location loc, Player p, float range, float iterationAmount) {
+    public static Object[] getLookingAtBlockSpot(Location loc, Player p, float range, float iterationAmount, boolean runComplexBlockCheck) {
         // Step 1: Get player's eye location and the direction they are looking
         Location eyeLocation = loc.clone();
         Vector direction = eyeLocation.getDirection().clone();
@@ -1257,8 +1355,10 @@ public class Test implements TabExecutor {
             }
 
             // Step 5: Check if the block is solid (not air)
-            if ((!MapFeature.isMaterialSafe(currentLocation.getBlock().getType())) || Double.valueOf(df.format(distance)) == maxDistance - 0.01) {
-                // Add the exact distance and location to the HashMap
+            if ((!MapFeature.isMaterialSafe(currentLocation.getBlock().getType()))
+                    || Double.valueOf(df.format(distance)) == maxDistance - 0.01
+            ) {
+
                 return new Object[]{distance, currentLocation};
             }
         }
@@ -1267,7 +1367,7 @@ public class Test implements TabExecutor {
         return new Object[]{range};
     }
 
-    public static Vector createHoleVector(Location hitLocation) {
+    public static BlockFace getClosestBlockFace(Location hitLocation) {
         double distanceNorth = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, 0, -0.5)); // North face
         double distanceSouth = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, 0, 0.5)); // South face
         double distanceWest = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(-0.5, 0, 0)); // West face
@@ -1275,31 +1375,47 @@ public class Test implements TabExecutor {
         double distanceUp = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, 0.5, 0)); // Up face
         double distanceDown = getDistanceToFace(hitLocation.clone(), hitLocation.getBlock().getLocation().clone().add(0.5, 0.5, 0.5).add(0, -0.5, 0)); // Down face
 
-        // Find the face with the smallest distance
         double minDistance = Math.min(Math.min(Math.min(distanceNorth, distanceSouth), Math.min(distanceWest, distanceEast)), Math.min(distanceUp, distanceDown));
+
+        if (minDistance == distanceNorth) {
+            return BlockFace.NORTH;
+        } else if (minDistance == distanceSouth) {
+            return BlockFace.SOUTH;
+        } else if (minDistance == distanceWest) {
+            return BlockFace.WEST;
+        } else if (minDistance == distanceEast) {
+            return BlockFace.EAST;
+        } else if (minDistance == distanceUp) {
+            return BlockFace.UP;
+        } else {
+            return BlockFace.DOWN;
+        }
+    }
+
+    public static Vector createHoleVector(Location hitLocation) {
+        BlockFace cloestFace = getClosestBlockFace(hitLocation);
 
         Location faceLocation = null;
         float pitch = 0;
         float yaw = 0;
 
-        // Return the corresponding face based on the smallest distance
-        if (minDistance == distanceNorth) {
+        if (cloestFace == BlockFace.NORTH) {
             faceLocation = hitLocation.clone().add(0, 0, -0.5);
             yaw = -180;
             pitch = 0;
-        } else if (minDistance == distanceSouth) {
+        } else if (cloestFace == BlockFace.SOUTH) {
             faceLocation = hitLocation.clone().add(0, 0, 0.5);
             yaw = 0;
             pitch = 0;
-        } else if (minDistance == distanceWest) {
+        } else if (cloestFace == BlockFace.WEST) {
             faceLocation = hitLocation.clone().add(-0.5, 0, 0);
             yaw = 90;
             pitch = 0;
-        } else if (minDistance == distanceEast) {
+        } else if (cloestFace == BlockFace.EAST) {
             faceLocation = hitLocation.clone().add(0.5, 0, 0);
             yaw = -90;
             pitch = 0;
-        } else if (minDistance == distanceUp) {
+        } else if (cloestFace == BlockFace.UP) {
             faceLocation = hitLocation.clone().add(0, 0.5, 0);
             yaw = 0;
             pitch = -90;
